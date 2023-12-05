@@ -9,3 +9,9 @@ dependencies:
 - `django 4.2`
 - `docker`
 - `docker-compose`
+
+## Repo Structure
+- `/csv_mapper`
+  This is the Django project.
+- `/docs`
+  This is where project documentation is stored.
