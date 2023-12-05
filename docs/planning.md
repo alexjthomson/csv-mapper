@@ -4,7 +4,8 @@ to a live graph.
 
 ## Context
 Gamma Telecom has many business critical SQL systems. They have developed a tool
-to export performance information for these systems as CSV files.
+to export performance information for these systems as CSV files. This tool runs
+24/7 and there currently isn't a good way of using these files.
 
 ## Introduction
 This project aims to read CSV files containing performance information for
@@ -46,3 +47,19 @@ and view these CSV files as graphs.
 - The application should be written in Python.
 - The application should have a minimum of 2 tables, and a maximum of 4 tables
   using any relational database technology of choice.
+
+## User Stories
+A set of user stories have been defined to better understand the requirements of
+the project with context.
+
+| User | Action | Summary |
+| ---- | ------ | ------- |
+| SQL System Stakeholder | Creating an account. | Able to access graphing software and monitor the systems that they are a stakeholder for. |
+| Site Admin | Approving an account registration. | Able to control who has access to the tool. |
+| Site Admin | Managing another account. | Able to remove users that no longer need access to the tool. Able to assist the user with login issues. |
+| SQL Developer | Checking performance of business critical SQL systems. | Able to quickly identify discrepancies in performance that they may need to focus on. Aids in debugging. |
+
+## Additional Considerations
+Some CSV files will likely have lots of different columns. This will clutter the
+graph and potentially make it unusable. Columns should be able to be toggled
+on/off by the user to declutter the graph.
