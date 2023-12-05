@@ -5,9 +5,17 @@ to a live graph.
 ## Technologies
 - Python 3.12 (Latest Stable)
 - Django 4.2 (Latest LTS)
+- Bootstrap
+- Chart.js
 - MySQL
 - Docker
 - Docker Compose
+
+## Application Design
+The application itself is split into two parts: the front-end, and the back-end.
+The back-end will use Python and Django and need to interact with a MySQL
+database. The front-end will use Bootstrap and Chart.js to provide a responsive and reactive
+front-end user experience.
 
 ## Database Design
 The application requires:
