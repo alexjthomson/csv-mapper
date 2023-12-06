@@ -18,6 +18,11 @@ database. The front-end will use Bootstrap and Chart.js to provide a responsive 
 front-end user experience.
 
 ## Database Design
+Since the application will be built using Django, it makes sense to make use of
+Django's ORM (Object Relational Mapping). We should create models which can then
+be used to generate a migration. This migration is what will then generate the
+tables within the database.
+
 The application requires:
 - User Accounts & Account Types
 - Graphs

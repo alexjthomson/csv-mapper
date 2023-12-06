@@ -7,7 +7,6 @@ services:
     build:
       context: "./docker/django"
       dockerfile: "dockerfile"
-    command: "python3 manage.py runserver 0.0.0.0:8000"
     restart: "unless-stopped"
     privileged: false
     user: "1000:1000"
@@ -32,7 +31,6 @@ services:
       - "django_src:/code"
   mysql:
     container_name: "mysql"
-    hostname: "mysql"
     image: "mysql:latest"
     restart: "unless-stopped"
     privileged: false
@@ -48,13 +46,31 @@ services:
       - "MYSQL_ALLOW_EMPTY_PASSWORD=no"
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      retries: 5
+      interval: "5s"
+      start_period: "5s"
+      timeout: "10s"
     networks:
       main:
         ipv4_address: "10.100.0.20"
     volumes:
       - "mysql_data:/var/lib/mysql"
+  phpmyadmin:
+    container_name: "phpmyadmin"
+    image:          "phpmyadmin/phpmyadmin:latest"
+    restart:        "unless-stopped"
+    privileged:     false
+    depends_on:
+      - "mysql"
+    environment:
+      - "PMA_HOST=10.100.0.20"
+      - "PMA_PORT=3306"
+      - "PMA_ARBITRARY=0"
+    networks:
+      main:
+        ipv4_address: "10.100.0.30"
+    ports:
+      - "18080:80"
 secrets:
   mysql_root_password:
     file: "./.secrets/mysql_root_password"

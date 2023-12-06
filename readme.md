@@ -34,3 +34,8 @@ sudo docker-compose up -d
   This is the Django project.
 - `/docs`
   This is where project documentation is stored.
+
+---
+
+## Useful Links
+- [Quickstart: Compose and Django](https://github.com/docker/awesome-compose/tree/master/official-documentation-samples/django/)

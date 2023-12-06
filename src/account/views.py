@@ -1,12 +1,25 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
+from .forms import RegisterForm
 
 # Create your views here.
 
-def login(request):
-    return HttpResponse("login")
-
-def logout(request):
-    return HttpResponse("logout")
-
-def register(request):
-    return HttpResponse("register")
+def sign_up(request):
+    # Check if POST data was sent to the view:
+    if request.method == 'POST':
+        # Construct a new registration form from the POST request data:
+        form = RegisterForm(request.POST)
+        # Validate that the form data is valid. This is also done in the clients
+        # browser; however, client-side validation is never a secure way of
+        # validating data since the user can craft a POST request to bypass
+        # client-side validation:
+        if form.is_valid():
+            # The form fields are valid. We can now create a new user:
+            user = form.save()
+            # We can now login the user:
+            login(request, user)
+            # We should redirect the user to the dashboard:
+            return redirect('/dashboard')
+    else:
+        form = RegisterForm()
+    return render(request, 'registration/sign-up.html', { 'form': form })
