@@ -1,0 +1,82 @@
+---
+version: "3.8"
+name:    "csv_mapper"
+services:
+  django:
+    container_name: "django"
+    build:
+      context: "./docker/django"
+      dockerfile: "dockerfile"
+    command: "python3 manage.py runserver 0.0.0.0:8000"
+    restart: "unless-stopped"
+    privileged: false
+    user: "1000:1000"
+    read_only: true
+    depends_on:
+      mysql:
+        condition: "service_healthy"
+    secrets:
+      - "mysql_django_password"
+    environment:
+      - "MYSQL_HOST=10.100.0.20"
+      - "MYSQL_PORT=3306"
+      - "MYSQL_DATABASE=csv_mapper"
+      - "MYSQL_USER=django"
+      - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
+    networks:
+      main:
+        ipv4_address: "10.100.0.10"
+    ports:
+      - "8000:8000"
+    volumes:
+      - "django_src:/code"
+  mysql:
+    container_name: "mysql"
+    hostname: "mysql"
+    image: "mysql:latest"
+    restart: "unless-stopped"
+    privileged: false
+    user: "1000:1000"
+    secrets:
+      - "mysql_root_password"
+      - "mysql_django_password"
+    environment:
+      - "MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password"
+      - "MYSQL_DATABASE=csv_mapper"
+      - "MYSQL_USER=django"
+      - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=no"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      main:
+        ipv4_address: "10.100.0.20"
+    volumes:
+      - "mysql_data:/var/lib/mysql"
+secrets:
+  mysql_root_password:
+    file: "./.secrets/mysql_root_password"
+  mysql_django_password:
+    file: "./.secrets/mysql_django_password"
+volumes:
+  django_src:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./src"
+  mysql_data:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./data/mysql"
+networks:
+  main:
+    driver: "bridge"
+    ipam:
+      config:
+        - subnet: "10.100.0.0/24"
+          gateway: "10.100.0.1"

@@ -1,0 +1,13 @@
+# syntax=docker/dockerfile:1
+
+# Fetch the python 3 parent image. This image will be modified by adding a new
+# `/code` directory. The parent image is further modified by installing the
+# Python requirements defiend in `requirements.txt`:
+FROM python:3
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /code
+COPY requirements.txt /code/
+RUN pip install -r requirements.txt
+RUN rm /code/requirements.txt

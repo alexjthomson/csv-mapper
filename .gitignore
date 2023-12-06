@@ -1,0 +1,10 @@
+.secrets/
+logs/
+
+*.temp
+*.log
+*.pot
+*.pyc
+*.bak
+
+src/*__pycache__
