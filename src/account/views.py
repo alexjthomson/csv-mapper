@@ -1,10 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.views import LoginView
 from .forms import RegisterForm
 
-# Create your views here.
-
-def sign_up(request):
+def register(request):
     # Check if POST data was sent to the view:
     if request.method == 'POST':
         # Construct a new registration form from the POST request data:
@@ -22,4 +21,4 @@ def sign_up(request):
             return redirect('/dashboard')
     else:
         form = RegisterForm()
-    return render(request, 'registration/sign-up.html', { 'form': form })
+    return render(request, 'registration/register.html', { 'form': form })

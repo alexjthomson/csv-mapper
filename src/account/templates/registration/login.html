@@ -2,13 +2,15 @@
 {% block title %}Login{% endblock %}
 {% load crispy_forms_tags %}
 {% block content%}
-<div class="container">
+<div class="container" style="width: 25%; min-width: 400px">
     <div class="p-5 bg-white text-dark rounded shadow-lg">
-        <h1 class="display-4 text-center mb-5">Login</h1>
+        <h1 class="display-5 mb-2 fw-bold">Login</h1>
+        <p class="mb-4">Stay in sync live business systems performance</p>
         <form method="post">
             {% csrf_token %}{{form|crispy}}
-            <p>Don't have an account? Register <a href="/account/sign-up">here</a>.</p>
-            <button type="submit" class="btn btn-primary">Login</button>
+            <a class="text-primary fw-bold" style="text-decoration: none;" href="/account/reset-password">Forgot password?</a>
+            <p>Don't have an account? Register <a href="/account/register">here</a>.</p>
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100">Login</button>
         </form>
     </div>
 </div>

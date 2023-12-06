@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% load crispy_forms_tags %}
+{% block content%}
+<div class="container" style="width: 30%; min-width: 600px">
+    <div class="p-5 bg-white text-dark rounded shadow-lg">
+        <h1 class="display-5 mb-2 fw-bold">Register</h1>
+        <p class="mb-4">Empower your digital presence - Sign up for real-time insights and unparalleled control with our cutting-edge monitoring tool.</p>
+        <form method="post">
+            {% csrf_token %}{{form|crispy}}
+            <p>Already have an account? Login <a href="/account/login">here</a>.</p>
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100 mt-4">Register</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
