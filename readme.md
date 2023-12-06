@@ -23,7 +23,14 @@ sudo docker-compose up -d
 ```
 
 ## Repo Structure
-- `/csv_mapper`
+- `data`
+  This is where Docker containers store data. Currently only the `mysql`
+  container needs to store any data.
+- `docker`
+  This is where Docker-files are defined to build Docker containers. Each
+  container that requires its own Docker-file has its own sub-directory who's
+  name matches the name of the container.
+- `/src`
   This is the Django project.
 - `/docs`
   This is where project documentation is stored.
