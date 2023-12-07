@@ -4,3 +4,99 @@ body {
 .form-control {
     padding: 10px 10px;
 }
+/* bootstrap mobile gutter fix */
+.row, .container-fluid {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+}
+.navbar {
+    background: #000;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+}
+.nav-item {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+.nav-item:hover {
+    text-decoration: underline;
+    text-decoration-color: #fff;
+}
+@media (max-width: 991.98px) {
+    .navbar-nav {
+        display: flex;
+        flex-direction: column;
+    }
+    .navbar-nav .nav-item:nth-child(1) {
+        order: 2;
+    }
+    .navbar-nav .nav-item:nth-child(2) {
+        order: 1;
+    }
+}
+.active {
+    text-decoration: underline;
+    text-decoration-color: #2dc3d4;
+}
+a {
+    color: #84d2db;
+}
+a:hover {
+    color: #fff;
+}
+.nav-profile {
+    overflow: hidden!important;
+}
+.profile-img {
+    border-radius: 50%;
+}
+.nav-profile .profile-img {
+    display: inline-block;
+    max-height: 2rem;
+    max-width: 100%;
+    vertical-align: middle;
+}
+.profile-username {
+    font-size: 16px;
+}
+.profile-logout {
+    font-size: 12px;
+    text-decoration: none;
+}
+/* Responsive grid */
+.r-grid {
+    -webkit-column-count: 3;
+    -moz-column-count: 3;
+    column-count: 3;
+    column-gap: 8px;
+}
+.r-grid .r-grid-item {
+    width: 100%;
+    margin: 0 0 8px 0;
+    break-inside: avoid;
+}
+.r-grid .r-grid-item .r-grid-img {
+    width: 100%;
+}
+@media (max-width: 800px) {
+    .r-grid {
+        -webkit-column-count: 1;
+        -moz-column-count: 1;
+        column-count: 1;
+    }
+}
+@media (min-width: 800px) {
+    .r-grid {
+        -webkit-column-count: 2;
+        -moz-column-count: 2;
+        column-count: 2;
+    }
+}
+@media (min-width: 1200px) {
+    .r-grid {
+        -webkit-column-count: 3;
+        -moz-column-count: 3;
+        column-count: 3;
+    }
+}

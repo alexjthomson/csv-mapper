@@ -8,10 +8,20 @@ dependencies:
 - `docker`
 - `docker-compose`
 
-## Running the Project
+## Quick Start
 This project has been designed to run within Docker containers. To setup the
-project simply install the dependencies and execute `setup.sh`:
+project simply the `docker` and `docker-compose` dependencies:
 
+```bash
+sudo pacman -S docker docker-compose
+```
+
+Next start the Docker service:
+```bash
+sudo systemctl start docker.service
+```
+
+Finally, run the setup script:
 ```bash
 chmod +x setup.sh
 ./setup.sh

@@ -1,4 +1,43 @@
 {% extends 'base.html' %} {% block title %}Dashboard{% endblock %}
 {% block content %}
-<p>Test</p>
+<div class="container">
+    <div class="r-grid mt-5">
+        <div class="r-grid-item p-4 bg-white rounded shadow-lg">
+            <h1>Dashboard</h1>
+            <hr />
+            <p>The dashboard contains a low-detail overview of every graph. To view a more detailed view of a graph, simply click the graph to expand it.</p>
+        </div>
+        {% for graph in graphs %}
+        <div class="r-grid-item bg-white rounded shadow-lg">
+            <canvas id="graph_{{ graph.id }}"></canvas>
+            <script>
+                const ctx = document.getElementById('graph_{{ graph.id }}');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                        datasets: [{
+                            label: '# of Votes',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            </script>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+    Chart.defaults.global.defaultFontColor = '#777';
+    Chart.defaults.global.defaultFontFamily = 'monospace';
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}

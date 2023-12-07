@@ -1,5 +1,15 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 # Dashboard view:
+@login_required
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    # Get the currently logged-in user:
+    current_user = request.user
+
+    graphs = []
+    view_data = {
+        "username": current_user.username,
+        "graphs": graphs
+    }
+    return render(request, 'dashboard.html', view_data)
