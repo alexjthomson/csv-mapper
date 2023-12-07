@@ -80,8 +80,8 @@ def change_password_view(request):
             update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated.')
             return redirect('/')
-        else:
-            messages.error(request, 'Your password could not be updated.')
+        #else:
+        #    messages.error(request, 'Your password could not be updated.')
     else:
         form = PasswordChangeForm(request.user)
     
