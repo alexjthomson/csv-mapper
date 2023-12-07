@@ -86,3 +86,9 @@ def change_password_view(request):
         form = PasswordChangeForm(request.user)
     
     return render(request, 'registration/change_password.html', { 'form': form })
+
+def forgot_password_view(request):
+    # Do not allow authenticated users onto this page:
+    if request.user.is_authenticated:
+        return redirect('/')
+    return render(request, 'registration/forgot_password.html')

@@ -8,7 +8,7 @@
         <p class="mb-4">Stay in sync live business systems performance</p>
         <form method="post">
             {% csrf_token %}{{form|crispy}}
-            <a class="text-primary fw-bold" style="text-decoration: none;" href="/account/reset-password">Forgot password?</a>
+            <a class="text-primary fw-bold" style="text-decoration: none;" href="/account/forgot-password">Forgot password?</a>
             <p>Don't have an account? Register <a href="/account/register">here</a>.</p>
             <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100">Login</button>
         </form>

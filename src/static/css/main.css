@@ -22,6 +22,7 @@ body {
 .nav-item:hover {
     text-decoration: underline;
     text-decoration-color: #fff;
+    text-decoration-thickness: 2px;
 }
 @media (max-width: 991.98px) {
     .navbar-nav {
@@ -37,13 +38,8 @@ body {
 }
 .active {
     text-decoration: underline;
-    text-decoration-color: #2dc3d4;
-}
-a {
-    color: #84d2db;
-}
-a:hover {
-    color: #fff;
+    text-decoration-color: #5694f0;
+    text-decoration-thickness: 2px;
 }
 .nav-profile {
     overflow: hidden!important;
@@ -63,6 +59,7 @@ a:hover {
 .profile-option {
     font-size: 12px;
     text-decoration: none;
+    color: #5694f0;
 }
 /* Responsive grid */
 .r-grid {
@@ -106,8 +103,6 @@ a:hover {
     bottom: 0;
     left: 0;
     right: 0;
-}
-.message-list {
 }
 .message-item {
     position: relative;
