@@ -10,7 +10,8 @@ dependencies:
 
 ## Quick Start
 This project has been designed to run within Docker containers. To setup the
-project simply the `docker` and `docker-compose` dependencies:
+project simply the `docker` and `docker-compose` dependencies. Please note that
+the quick start guide has been written for Arch-based linux distributions:
 
 ```bash
 sudo pacman -S docker docker-compose
