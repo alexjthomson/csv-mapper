@@ -1,3 +1,104 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
-# Create your models here.
+class DataSourceModel(models.Model):
+    """
+    Describes the location of CSV data that can be fetched by the application in
+    order to build a graph.
+
+    Attributes:
+    - name (string): A human-readable, easy-to-remember, and descriptive name
+      that can be used to easily identify the data source. This should be
+      unique.
+    - location (string): Location that the CSV data is expected to be found at.
+      This should be formatted like a URL.
+    """
+
+    class Meta:
+        """
+        Metadata for the data-source model.
+
+        Attributes:
+        - app_label (string): Label of the app that the model belongs to.
+        - db_table (string): Name of the table that the model corresponds to.
+        - db_table_comment (string): Comment for the database table.
+        """
+
+        app_label = 'api'
+        db_table = 'data_source'
+        db_table_comment = 'Describes the location of CSV data.'
+
+    name = models.CharField(max_length=128, unique=True)
+    location = models.CharField(max_length=256)
+
+class GraphModel(models.Model):
+    """
+    Contains the information required to describe a graph.
+
+    Attributes:
+    - name (string): A human-readable, easy-to-remember, and descriptive name
+    that can be used to easily identify the graph. This should be unique.
+    - data_source_id (integer, foreign key): ID of the data-source that supplies
+      data to this graph.
+    """
+
+    class Meta:
+        """
+        Metadata for the graph model.
+
+        Attributes:
+        - app_label (string): Label of the app that the model belongs to.
+        - db_table (string): Name of the table that the model corresponds to.
+        - db_table_comment (string): Comment for the database table.
+        """
+
+        app_label = 'api'
+        db_table = 'graph'
+        db_table_comment = 'Contains graphs'
+
+    name = models.CharField(max_length=128, unique=True)
+    data_source_id = models.ForeignKey(DataSourceModel, on_delete=models.CASCADE)
+
+class DataColumnConfigModel(models.Model):
+    """
+    Contains configuration options for a singular column within a data-source.
+
+    Attributes:
+    - data_source_id (integer, foreign key): ID of the data-source that the
+      configuration applies to.
+    - column_id (16-bit integer): Zero-indexed ID of the column within the
+      referenced data-source that the configuration applies to.
+    - transform_type (string): An enum-like variable that can be used to
+      transform raw values within the data-source column into another value
+      using a transformer. The transformer is referenced by name in this field.
+    - unit (string): The unit of the data within the data-source column. For
+      instance, if the column is describing a bit-rate in megabits per second,
+      this may be equal to `Mbps`.
+    """
+
+    class Meta:
+        """
+        Metadata for the data-source column config model.
+
+        Attributes:
+        - app_label (string): Label of the app that the model belongs to.
+        - db_table (string): Name of the table that the model corresponds to.
+        - db_table_comment (string): Comment for the database table.
+        """
+
+        app_label = 'api'
+        db_table = 'data_column_config'
+        db_table_comment = 'Contains configuration for individual columns of data-sources.'
+
+    class Transformers(models.TextChoices):
+        """
+        Maps a transform name to a transformer function capable of transforming
+        a column within a data-source into a new format.
+        """
+        NONE = 'none', ''
+
+    data_source_id = models.ForeignKey(DataSourceModel, on_delete=models.CASCADE)
+    column_id = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
+    column_name = models.CharField(max_length=128)
+    transform_name = models.CharField(max_length=128, choices=Transformers.choices, default=Transformers.NONE)
+    unit = models.CharField(max_length=32)

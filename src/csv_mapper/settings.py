@@ -84,41 +84,39 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'HOST':     os.environ.get('MYSQL_HOST'),
         'PORT':     os.environ.get('MYSQL_PORT'),
-        'NAME':     os.environ.get('MYSQL_DATABASE'),
+        'NAME':     os.environ.get('MYSQL_MAIN_DATABASE'),
+        'USER':     os.environ.get('MYSQL_USER'),
+        'PASSWORD': open(os.environ.get('MYSQL_PASSWORD_FILE')).read().rstrip('\n')
+    },
+    'graph': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST':     os.environ.get('MYSQL_HOST'),
+        'PORT':     os.environ.get('MYSQL_PORT'),
+        'NAME':     os.environ.get('MYSQL_GRAPH_DATABASE'),
         'USER':     os.environ.get('MYSQL_USER'),
         'PASSWORD': open(os.environ.get('MYSQL_PASSWORD_FILE')).read().rstrip('\n')
     }
 }
+DATABASE_ROUTERS = ['api.dbrouters.ApiRouter']
 
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator' },
+    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator' },
+    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator' },
+    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator' },
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
+LANGUAGE_CODE = 'en-gb'
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 

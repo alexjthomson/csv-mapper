@@ -19,7 +19,8 @@ services:
     environment:
       - "MYSQL_HOST=10.100.0.20"
       - "MYSQL_PORT=3306"
-      - "MYSQL_DATABASE=csv_mapper"
+      - "MYSQL_MAIN_DATABASE=main"
+      - "MYSQL_GRAPH_DATABASE=graph"
       - "MYSQL_USER=django"
       - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
     networks:
@@ -40,7 +41,7 @@ services:
       - "mysql_django_password"
     environment:
       - "MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password"
-      - "MYSQL_DATABASE=csv_mapper"
+      - "MYSQL_DATABASE=main"
       - "MYSQL_USER=django"
       - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
       - "MYSQL_ALLOW_EMPTY_PASSWORD=no"
