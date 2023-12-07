@@ -15,17 +15,27 @@ def login_view(request):
     if request.method == 'POST':
         # Construct a new authentication form from the POST request data:
         form = AuthenticationForm(request, data=request.POST)
+
         # Validate that the form data is valid, we can then create the user:
         if form.is_valid():
-            # Authenticate the user
+            # Authenticate the user:
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
+
+            # Check if the authentication was successful:
             if user is not None:
+                # The authentication was successful, we should log the user in
+                # and then redirect them to the dashboard:
                 login(request, user)
                 return redirect('/')
     else:
+        # The page was accessed without POSTing any data, we should create a new
+        # form for the client to re-submit to this view with their login
+        # information:
         form = AuthenticationForm()
+    
+    # We should render the login page:
     return render(request, 'registration/login.html', { 'form': form })
 
 @login_required
