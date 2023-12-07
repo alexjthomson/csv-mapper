@@ -34,6 +34,13 @@ def logout_view(request):
     return redirect('/account/login')
 
 def register_view(request):
+    # Check if the user is currently logged in, if they are, we should log them
+    # out:
+    if request.user.is_authenticated:
+        # We should simply log the user out here as to keep them on the register
+        # view since the logout view will redirect to the login view:
+        logout(request)
+
     # Check if POST data was sent to the view:
     if request.method == 'POST':
         # Construct a new registration form from the POST request data:
