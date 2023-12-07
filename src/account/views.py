@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
 from .forms import RegisterForm
@@ -69,3 +70,19 @@ def register_view(request):
     else:
         form = RegisterForm()
     return render(request, 'registration/register.html', { 'form': form })
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password was successfully updated.')
+            return redirect('/')
+        else:
+            messages.error(request, 'Your password could not be updated.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'registration/change_password.html', { 'form': form })

@@ -40,7 +40,11 @@
                             <span class="col profile-username">{{username}}</span>
                         </div>
                         <div class="row">
-                            <a class="col profile-logout" href="/account/logout">Logout</a>
+                            <div class="col">
+                                <a class="profile-option" href="/account/change_password">Change Password</a>
+                                <div class="vr" style="min-height: 0.5em; color: #fff; opacity: 0.5;"></div>
+                                <a class="profile-option" href="/account/logout">Logout</a>
+                            </div>
                         </div>
                     </div>
                     <img class="profile-img" src="{% static 'img/profile.png' %}"/>
@@ -49,6 +53,17 @@
         </div>
     </nav>
     {% block content %}{% endblock %}
+    {% if messages %}
+    <div id="messages">
+        <ul class="message-list">
+            {% for message in messages %}
+            <li class="message-item{% if message.tags %} {{ message.tags }}{% endif %}">
+                {{message}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>
