@@ -2,9 +2,22 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import SourceModel
+from .models import GraphModel, SourceModel, SourceColumnConfigModel
 import csv
 import json
+import asyncio
+from urllib.parse import urlparse
+from urllib.request import urlopen
+from urllib.error import URLError
+from io import StringIO
+
+ALLOWED_CSV_CHARSET='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\({)}[]+<>,!?£$%^&* '
+
+def clean_csv_value(value):
+    """
+    Cleans a CSV entry.
+    """
+    return ''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip()
 
 @login_required
 def source_list(request):
@@ -311,12 +324,13 @@ def source_detail(request, source_id):
         source = SourceModel.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now modify it:
-            source.name = sourcE_name
+            source.name = name
             source.location = location
+            source.has_header = has_header
             source.save()
             response_data = {
                 'result': 'success',
-                'message': f'Deleted source `{source_id}`.'
+                'message': f'Updated source `{source_id}`.'
             }
             return JsonResponse(response_data, status=200)
         else:
@@ -355,16 +369,106 @@ def source_data(request, source_id):
                 'message': f'Source `{source_id}` does not exist.'
             }
             return JsonResponse(response_data, status=404)
+
+        # Parse the URL to the source:
+        try:
+            source_url = urlparse(source.location)
+        except URLError:
+            response_data = {
+                'result': 'error',
+                'message': f'Cannot parse location: `{source.location}`.'
+            }
+            return JsonResponse(response_data, status=400)
         
-        # Get any configurations for the source:
-        configurations = DataSourceConfigModel.objects.filter(source_id=source_id)
+        # Read the CSV data from the source:
+        try:
+            if source_url.scheme in ('http', 'https', 'ftp'):
+                with urlopen(source.location) as response:
+                    csv_content = response.read().decode('utf-8')
+            elif source_url.scheme == 'file':
+                with open(source_url.path, 'r') as file:
+                    csv_content = file.read()
+            else:
+                response_data = {
+                    'result': 'error',
+                    'message': f'Cannot open location because `{source_url.scheme}` is not a supported URL scheme.'
+                }
+                return JsonResponse(response_data, status=400)
+        except Exception as e:
+            response_data = {
+                'result': 'error',
+                'message': f'Failed to read CSV data from location: `{source.location}`. {e}'
+            }
+            return JsonResponse(response_data, status=400)
 
-        # Read the CSV file:
-        with open(source.location, 'r') as file:
-            # Create a CSV reader object:
-            csv_reader = csv.reader(file)
+        # Convert the CSV content into a CSV file:
+        csv_file = StringIO(csv_content)
+        csv_reader = csv.reader(csv_file)
 
-            # Iterate through each row
+        # Get the first row of the CSV resource. This may correspond to the
+        # header, or may be the first row of actual data. This is required to
+        # find the number of columns in the CSV file and if this is the header,
+        # it is used to get column names:
+        current_row = next(csv_reader, None)
+
+        # Get the number of columns, this is useful to know. We can also
+        # validate that the CSV file has at least one column and is therefore
+        # valid by checking if there are no columns:
+        column_count = len(current_row)
+        if column_count == 0:
+            response_data = {
+                'result': 'error',
+                'message': 'CSV source has zero columns.'
+            }
+            return JsonResponse(response_data, status=406)
+
+        # Construct `columns`:
+        columns = []
+        # Pre-populate the header values:
+        if source.has_header:
+            for column in current_row:
+                columns.append({
+                    'name': clean_csv_value(column),
+                    'unit': None,
+                    'transform': None,
+                    'data': []
+                })
+        else:
+            for i in range(column_count):
+                columns.append({
+                    'name': None,
+                    'unit': None,
+                    'transform': None,
+                    'data': []
+                })
+        # Check for column configuration overrides:
+        column_configs = SourceColumnConfigModel.objects.filter(source_id=source_id)
+        for config in column_configs:
+            # TODO: Validate this does what it is expected to do
+            columns[config.column_id] = {
+                'name': clean_csv_value(config.column_name),
+                'unit': config.unit,
+                'transform': SourceColumnConfigModel.Transformers.from_str(config.transform_name),
+                'data': []
+            }
+        
+        # Collect the CSV rows:
+        if source.has_header:
+            # We should make sure we move to the next row if there is a header
+            # so that we are pointing at the first row of data:
+            current_row = next(csv_reader, None)
+        
+        while current_row is not None:
+            for index, entry in enumerate(current_row):
+                columns[index]['data'].append(clean_csv_value(entry))
+            current_row = next(csv_reader, None)
+        
+        # Return the CSV data as JSON:
+        response_data = {
+            'result': 'success',
+            'data': columns
+        }
+        return JsonResponse(response_data, status=200)
     else:
         response_data = {
             'result': 'error',

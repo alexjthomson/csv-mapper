@@ -28,6 +28,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - "django_data:/data"
       - "django_src:/code"
   mysql:
     container_name: "mysql"
@@ -77,6 +78,12 @@ secrets:
   mysql_django_password:
     file: "./.secrets/mysql_django_password"
 volumes:
+  django_data:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./data/django"
   django_src:
     driver: "local"
     driver_opts:

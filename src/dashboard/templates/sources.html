@@ -26,6 +26,7 @@
             </thead>
             <tbody id="source-table"></tbody>
         </table>
+        {% csrf_token %}
         <script>
             async function updateSources() {
                 try {
@@ -67,7 +68,7 @@
                                                 .addClass('btn btn-primary rounded-pill fw-bold')
                                                 .attr('data-bs-toggle', 'modal')
                                                 .attr('data-bs-target', '#edit-source-modal')
-                                                .attr('onclick', `setEditModalInfo(${entry.id}, "${entry.name}", "${entry.location}", ${entry.has_header})`)
+                                                .attr('onclick', `setEditModalInfo(${entry.id})`)
                                                 .text('Edit')
                                                 )
                                                 {% endif %}
@@ -109,14 +110,13 @@
                             <div class="mb-3">
                                 <label for="create-ource-location" class="form-label">Location</label>
                                 <input id="create-source-location" name="location" type="url" class="form-control" aria-describedby="create-source-location-help"/>
-                                <div id="create-source-location-help" class="form-text">Use a URL to the source. For example: file://example/csv/simple_data.csv</div>
+                                <div id="create-source-location-help" class="form-text">Use a URL to the source. For example: file:///data/example/csv/simple_data.csv</div>
                             </div>
                             <div class="mb-3">
                                 <label for="create-source-has-header" class="form-label mb-0">Has Header</label>
                                 <input id="create-source-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="create-source-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
                                 <div id="create-source-has-header-help" class="form-text mt-0">Is the target CSV source expected to have a header?</div>
                             </div>
-                            {% csrf_token %}
                             <button type="button" class="btn btn-primary" onclick="submitCreateSourceForm()">Create Source</button>
                         </form>
                     </div>
@@ -158,7 +158,7 @@
         {% endif %}
         {% if perms.api.view_sourcemodel %}
         <div id="inspect-source-modal" class="modal fade" tabindex="-1" aria-labelledby="inspect-source-label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 id="inspect-source-label" class="modal-title fw-bold"></h5>
@@ -173,6 +173,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        <p id="inspect-source-error" class="text-danger" style="display: none;"></p>
                         <p id="inspect-source-location" class="text-secondary"></p>
                     </div>
                 </div>
@@ -180,25 +181,145 @@
         </div>
         <script>
             async function setInspectModalInfo(id, name, location, has_header) {
+                $('#inspect-source-error').hide();
                 $('#inspect-source-source-id').val(id);
                 $('#inspect-source-label').text(name);
                 $('#inspect-source-location').text(location);
+                const tableHead = $('#inspect-source-thead')
+                tableHead.empty();
+                const tableBody = $('#inspect-source-tbody');
+                tableBody.empty();
                 const response = await fetch(`/api/source/${id}/data/`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    const tableHead = $('#inspect-source-thead')
-                    tableHead.empty();
-                    const tableBody = $('#inspect-source-tbody');
-                    tableBody.empty();
-                    $.each(data.data, function(index, column) {
-
+                const jsonResponse = await response.json();
+                if (jsonResponse.result != 'success') {
+                    console.error(jsonResponse.message);
+                    $('#inspect-source-error').text(jsonResponse.message).show();
+                } else {
+                    const columns = jsonResponse.data;
+                    const tableHeadRow = $('<tr>');
+                    var rowCount = -1;
+                    const columnCount = columns.length;
+                    const tableRows = [];
+                    $.each(columns, function(index, column) {
+                        if (column.unit != null) {
+                            tableHeadRow.append(
+                                $('<th>').append(
+                                    $('<span>').text(column.name)
+                                ).append(
+                                    $('<span>').addClass("text-secondary").text(` (${column.unit})`)
+                                )
+                            );
+                        } else {
+                            tableHeadRow.append(
+                                $('<th>').text(column.name)
+                            );
+                        }
+                        if (rowCount == -1) {
+                            rowCount = column.data.length;
+                        }
                     });
+                    tableHead.append(tableHeadRow);
+                    for (let i = 0; i < rowCount; i++) {
+                        var row = $('<tr>');
+                        for (let j = 0; j < columnCount; j++) {
+                            row.append($('<td>').text(columns[j].data[i]));
+                        }
+                        tableBody.append(row);
+                    }
+                }
             }
         </script>
         {% endif %}
         {% if perms.api.change_sourcemodel %}
+        <div id="edit-source-modal" class="modal fade" tabindex="-1" aria-labelledby="edit-source-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 id="edit-source-label" class="modal-title">Edit Source</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="edit-source-form">
+                            <div class="mb-3">
+                                <label for="edit-source-name" class="form-label">Display Name</label>
+                                <input id="edit-source-name" name="name" type="text" class="form-control" aria-describedby="edit-source-name-help"/>
+                                <div id="edit-source-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-ource-location" class="form-label">Location</label>
+                                <input id="edit-source-location" name="location" type="url" class="form-control" aria-describedby="edit-source-location-help"/>
+                                <div id="edit-source-location-help" class="form-text">Use a URL to the source. For example: file://example/csv/simple_data.csv</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-source-has-header" class="form-label mb-0">Has Header</label>
+                                <input id="edit-source-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="edit-source-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
+                                <div id="edit-source-has-header-help" class="form-text mt-0">Is the target CSV source expected to have a header?</div>
+                            </div>
+                            <button id="edit-source-submit-button" type="button" class="btn btn-primary" onclick="submitEditSourceForm()">Edit Source</button>
+                        </form>
+                        <p id="edit-source-error" class="text-danger" style="display: none;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            async function setEditModalInfo(source_id) {
+                $('#edit-source-error').hide();
+                $('#edit-source-name').val('');
+                $('#edit-source-location').val('');
+                $('#edit-source-has_header').prop('checked', false);
+                $('#edit-source-submit-button').attr('onclick', `submitEditSourceForm(${source_id})`);
+                try {
+                    const response = await fetch(`/api/source/${source_id}/`, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                        }
+                    });
+                    const jsonResponse = await response.json();
+                    if (jsonResponse.result != 'success') {
+                        $('#edit-source-error').text(jsonResponse.message);
+                        $('#edit-source-error').show();
+                    } else {
+                        const source = jsonResponse.data;
+                        $('#edit-source-name').val(source.name);
+                        $('#edit-source-location').val(source.location);
+                        $('#edit-source-has-header').prop('checked', source.has_header);
+                    }
+                } catch (error) {
+                    console.error('Error fetching source data: ', error)
+                }
+            }
+            async function submitEditSourceForm(source_id) {
+                $('#edit-source-error').hide();
+                const formData = $('#edit-source-form').serializeArray();
+                formDataJson = {};
+                $.each(formData, function(index, field) {
+                    formDataJson[field.name] = field.value;
+                });
+                formDataJson['has_header'] = formDataJson['has_header'] == 'on'
+                try {
+                    const response = await fetch(`/api/source/${source_id}/`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                        },
+                        body: JSON.stringify(formDataJson)
+                    });
+                    const jsonResponse = await response.json();
+                    if (jsonResponse.result != 'success') {
+                        $('#edit-source-error').text(jsonResponse.message);
+                        $('#edit-source-error').show();
+                    } else {
+                        await updateSources();
+                        $('#edit-source-modal').modal('hide');
+                    }
+                } catch (error) {
+                    console.error('Error submitting form: ', error);
+                }
+            }
+        </script>
         {% endif %}
         {% if perms.api.delete_sourcemodel %}
         <div id="delete-source-modal" class="modal fade" tabindex="-1" aria-labelledby="delete-source-label" aria-hidden="true">
@@ -212,7 +333,6 @@
                         <p>Are you sure that you want to delete <span id="delete-source-source-name" class="text-danger">this source</span>?</p>
                         <form id="delete-source-form">
                             <input id="delete-source-source-id" name="source_id" type="hidden"/>
-                            {% csrf_token %}
                             <button type="button" class="btn btn-danger" onclick="submitDeleteSourceForm()">Delete Source</button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
                         </form>
@@ -228,13 +348,12 @@
             async function submitDeleteSourceForm() {
                 const formData = $('#delete-source-form').serializeArray();
                 const sourceId = formData[0].value;
-                const csrfToken = formData[1].value;
                 try {
                     const response = await fetch(`/api/source/${sourceId}`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
+                            'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
                         },
                     });
     
