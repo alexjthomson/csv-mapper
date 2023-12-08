@@ -4,9 +4,9 @@
     <div class="row">
         <div class="col">
             <h1>Sources</h1>
-            <p class="mb-0">View{% if perms.api.change_datasourcemodel or perms.api.add_datasourcemodel or perms.api.delete_datasourcemodel %} and manage{% endif %} CSV sources. These are used to supply data to graphs.</p>
+            <p class="mb-0">View{% if perms.api.change_sourcemodel or perms.api.add_sourcemodel or perms.api.delete_sourcemodel %} and manage{% endif %} CSV sources. These are used to supply data to graphs.</p>
         </div>
-        {% if perms.api.add_datasourcemodel %}
+        {% if perms.api.add_sourcemodel %}
         <div class="col d-flex align-items-center justify-content-end">
             <button type="button" class="btn btn-primary rounded-pill shadow fw-bold" data-bs-toggle="modal" data-bs-target="#create-source-modal">Create Source</button>
         </div>
@@ -20,12 +20,11 @@
                     <th scope="col">#</th>
                     <th scope="col">Display Name</th>
                     <th scope="col">Location</th>
+                    <th scope="col">Has Header</th>
                     <th scope="col" class="fit">Actions</th>
                 </tr>
             </thead>
-            <tbody id="source-table">
-                
-            </tbody>
+            <tbody id="source-table"></tbody>
         </table>
         <script>
             async function updateSources() {
@@ -43,28 +42,36 @@
                                 $('<td>').text(entry.id),
                                 $('<td>').text(entry.name),
                                 $('<td>').text(entry.location),
+                                $('<td>').append(
+                                    $('<input>')
+                                        .attr('type', 'checkbox')
+                                        .attr('onclick', 'return false;')
+                                        .prop('checked', entry.has_header)
+                                ),
                                 $('<td>').addClass('fit').append(
                                     $('<div>')
                                         .addClass('table-action-buttons')
-                                        {% if perms.api.view_datasourcemodel %}
+                                        {% if perms.api.view_sourcemodel %}
                                         .append(
                                             $('<button>')
                                                 .addClass('btn btn-primary rounded-pill fw-bold')
                                                 .attr('data-bs-toggle', 'modal')
                                                 .attr('data-bs-target', '#inspect-source-modal')
+                                                .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}", "${entry.location}")`)
                                                 .text('Inspect')
                                         )
                                         {% endif %}
-                                        {% if perms.api.change_datasourcemodel %}
+                                        {% if perms.api.change_sourcemodel %}
                                         .append(
                                             $('<button>')
                                                 .addClass('btn btn-primary rounded-pill fw-bold')
                                                 .attr('data-bs-toggle', 'modal')
                                                 .attr('data-bs-target', '#edit-source-modal')
+                                                .attr('onclick', `setEditModalInfo(${entry.id}, "${entry.name}", "${entry.location}", ${entry.has_header})`)
                                                 .text('Edit')
                                                 )
                                                 {% endif %}
-                                                {% if perms.api.delete_datasourcemodel %}
+                                                {% if perms.api.delete_sourcemodel %}
                                                 .append(
                                             $('<button>')
                                                 .addClass('btn btn-danger rounded-pill fw-bold')
@@ -84,7 +91,7 @@
             }
             updateSources();
         </script>
-        {% if perms.api.add_datasourcemodel %}
+        {% if perms.api.add_sourcemodel %}
         <div id="create-source-modal" class="modal fade" tabindex="-1" aria-labelledby="create-source-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -95,14 +102,19 @@
                     <div class="modal-body">
                         <form id="create-source-form">
                             <div class="mb-3">
-                                <label for="source-name" class="form-label">Display Name</label>
-                                <input id="source-name" name="source_name" type="text" class="form-control" aria-describedby="source-name-help"/>
-                                <div id="source-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
+                                <label for="create-source-name" class="form-label">Display Name</label>
+                                <input id="create-source-name" name="name" type="text" class="form-control" aria-describedby="create-source-name-help"/>
+                                <div id="create-source-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
                             </div>
                             <div class="mb-3">
-                                <label for="source-location" class="form-label">Location</label>
-                                <input id="source-location" name="source_location" type="url" class="form-control" aria-describedby="source-location-help"/>
-                                <div id="source-location-help" class="form-text">Use a URL to the source. For example: file://example/csv/simple_data.csv</div>
+                                <label for="create-ource-location" class="form-label">Location</label>
+                                <input id="create-source-location" name="location" type="url" class="form-control" aria-describedby="create-source-location-help"/>
+                                <div id="create-source-location-help" class="form-text">Use a URL to the source. For example: file://example/csv/simple_data.csv</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="create-source-has-header" class="form-label mb-0">Has Header</label>
+                                <input id="create-source-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="create-source-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
+                                <div id="create-source-has-header-help" class="form-text mt-0">Is the target CSV source expected to have a header?</div>
                             </div>
                             {% csrf_token %}
                             <button type="button" class="btn btn-primary" onclick="submitCreateSourceForm()">Create Source</button>
@@ -118,6 +130,7 @@
                 $.each(formData, function(index, field) {
                     formDataJson[field.name] = field.value;
                 });
+                formDataJson['has_header'] = formDataJson['has_header'] == 'on'
                 try {
                     const response = await fetch('/api/source/', {
                         method: 'POST',
@@ -143,11 +156,51 @@
             }
         </script>
         {% endif %}
-        {% if perms.api.view_datasourcemodel %}
+        {% if perms.api.view_sourcemodel %}
+        <div id="inspect-source-modal" class="modal fade" tabindex="-1" aria-labelledby="inspect-source-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 id="inspect-source-label" class="modal-title fw-bold"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive rounded">
+                            <table class="table">
+                                <thead id="inspect-source-thead">
+                                </thead>
+                                <tbody id="inspect-source-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="inspect-source-location" class="text-secondary"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            async function setInspectModalInfo(id, name, location, has_header) {
+                $('#inspect-source-source-id').val(id);
+                $('#inspect-source-label').text(name);
+                $('#inspect-source-location').text(location);
+                const response = await fetch(`/api/source/${id}/data/`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    const tableHead = $('#inspect-source-thead')
+                    tableHead.empty();
+                    const tableBody = $('#inspect-source-tbody');
+                    tableBody.empty();
+                    $.each(data.data, function(index, column) {
+
+                    });
+            }
+        </script>
         {% endif %}
-        {% if perms.api.change_datasourcemodel %}
+        {% if perms.api.change_sourcemodel %}
         {% endif %}
-        {% if perms.api.delete_datasourcemodel %}
+        {% if perms.api.delete_sourcemodel %}
         <div id="delete-source-modal" class="modal fade" tabindex="-1" aria-labelledby="delete-source-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -161,6 +214,7 @@
                             <input id="delete-source-source-id" name="source_id" type="hidden"/>
                             {% csrf_token %}
                             <button type="button" class="btn btn-danger" onclick="submitDeleteSourceForm()">Delete Source</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
                         </form>
                     </div>
                 </div>

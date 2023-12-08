@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
-class DataSourceModel(models.Model):
+class SourceModel(models.Model):
     """
     Describes the location of CSV data that can be fetched by the application in
     order to build a graph.
@@ -12,6 +12,8 @@ class DataSourceModel(models.Model):
       unique.
     - location (string): Location that the CSV data is expected to be found at.
       This should be formatted like a URL.
+    - has_header (boolean): Describes if the CSV file is expected to have a
+      header.
     """
 
     class Meta:
@@ -25,11 +27,12 @@ class DataSourceModel(models.Model):
         """
 
         app_label = 'api'
-        db_table = 'data_source'
+        db_table = 'source'
         db_table_comment = 'Describes the location of CSV data.'
 
     name = models.CharField(max_length=128, unique=False)
     location = models.CharField(max_length=256)
+    has_header = models.BooleanField(default=False)
 
 class GraphModel(models.Model):
     """
@@ -38,8 +41,8 @@ class GraphModel(models.Model):
     Attributes:
     - name (string): A human-readable, easy-to-remember, and descriptive name
     that can be used to easily identify the graph. This should be unique.
-    - data_source_id (integer, foreign key): ID of the data-source that supplies
-      data to this graph.
+    - source_id (integer, foreign key): ID of the data-source that supplies data
+    to this graph.
     """
 
     class Meta:
@@ -57,15 +60,15 @@ class GraphModel(models.Model):
         db_table_comment = 'Contains graphs'
 
     name = models.CharField(max_length=128, unique=False)
-    data_source_id = models.ForeignKey(DataSourceModel, on_delete=models.CASCADE)
+    source_id = models.ForeignKey(SourceModel, on_delete=models.CASCADE)
 
-class DataColumnConfigModel(models.Model):
+class SourceColumnConfigModel(models.Model):
     """
     Contains configuration options for a singular column within a data-source.
 
     Attributes:
-    - data_source_id (integer, foreign key): ID of the data-source that the
-      configuration applies to.
+    - source_id (integer, foreign key): ID of the data-source that the
+    configuration applies to.
     - column_id (16-bit integer): Zero-indexed ID of the column within the
       referenced data-source that the configuration applies to.
     - transform_type (string): An enum-like variable that can be used to
@@ -87,7 +90,7 @@ class DataColumnConfigModel(models.Model):
         """
 
         app_label = 'api'
-        db_table = 'data_column_config'
+        db_table = 'source_column_config'
         db_table_comment = 'Contains configuration for individual columns of data-sources.'
 
     class Transformers(models.TextChoices):
@@ -97,7 +100,7 @@ class DataColumnConfigModel(models.Model):
         """
         NONE = 'none', ''
 
-    data_source_id = models.ForeignKey(DataSourceModel, on_delete=models.CASCADE)
+    source_id = models.ForeignKey(SourceModel, on_delete=models.CASCADE)
     column_id = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
     column_name = models.CharField(max_length=128)
     transform_name = models.CharField(max_length=128, choices=Transformers.choices, default=Transformers.NONE)

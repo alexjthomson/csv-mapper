@@ -2,7 +2,8 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import DataSourceModel
+from .models import SourceModel
+import csv
 import json
 
 @login_required
@@ -16,7 +17,7 @@ def source_list(request):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.view_datasourcemodel'):
+        if not request.user.has_perm('api.view_sourcemodel'):
             response_data = {
                 'result': 'error',
                 'message': 'User does not have permission to perform this action.'
@@ -24,7 +25,7 @@ def source_list(request):
             return JsonResponse(response_data, status=403)
 
         # Get the sources:
-        sources = DataSourceModel.objects.all()
+        sources = SourceModel.objects.all()
 
         # Create a JSON array to write each source into:
         sources_json = []
@@ -35,7 +36,8 @@ def source_list(request):
             source_data = {
                 'id': source.id,
                 'name': source.name,
-                'location': source.location
+                'location': source.location,
+                'has_header': source.has_header
             }
             sources_json.append(source_data)
 
@@ -54,16 +56,16 @@ def source_list(request):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.add_datasourcemodel'):
+        if not request.user.has_perm('api.add_sourcemodel'):
             response_data = {
                 'result': 'error',
                 'message': 'User does not have permission to perform this action.'
             }
             return JsonResponse(response_data, status=403)
         
-        # Get the JSON body:
+        # Get JSON request body:
         try:
-            request_data = json.loads(request.body.decode('utf-8'))
+            json_request = json.loads(request.body.decode('utf-8'))
         except json.JSONDecodeError:
             response_data = {
                 'result': 'error',
@@ -77,39 +79,54 @@ def source_list(request):
             }
             return JsonResponse(response_data, status=400)
         
-        # Get and validate the `source_name`:
-        source_name = request_data.get('source_name')
-        if source_name is None:
+        # Get and validate the `name`:
+        name = json_request['name']
+        if name is None:
             response_data = {
                 'result': 'error',
-                'message': 'No `source_name` provided.'
+                'message': 'No `name` provided.'
             }
             return JsonResponse(response_data, status=400)
-        elif not isinstance(source_name, str):
+        elif not isinstance(name, str):
             response_data = {
                 'result': 'error',
-                'message': 'Invalid `source_name`.'
+                'message': 'Invalid `name`.'
             }
             return JsonResponse(response_data, status=400)
         
-        # Get and validate the `source_location`:
-        source_location = request_data.get('source_location')
-        if source_location is None:
+        # Get and validate the `location`:
+        location = json_request['location']
+        if location is None:
             response_data = {
                 'result': 'error',
-                'message': 'No `source_location` provided.'
+                'message': 'No `location` provided.'
             }
             return JsonResponse(response_data, status=400)
-        elif not isinstance(source_location, str):
+        elif not isinstance(location, str):
             response_data = {
                 'result': 'error',
-                'message': 'Invalid `source_location`.'
+                'message': 'Invalid `location`.'
+            }
+            return JsonResponse(response_data, status=400)
+
+        # Get and validate the `has_header`:
+        has_header = json_request['has_header']
+        if has_header is None:
+            response_data = {
+                'result': 'error',
+                'message': 'No `has_header` provided.'
+            }
+            return JsonResponse(response_data, status=400)
+        elif not isinstance(has_header, bool):
+            response_data = {
+                'result': 'error',
+                'message': 'Invalid `has_header`.'
             }
             return JsonResponse(response_data, status=400)
 
         # Create the source:
         try:
-            source_instance = DataSourceModel(name=source_name, location=source_location)
+            source_instance = SourceModel(name=name, location=location, has_header=has_header)
             source_instance.save()
         except ValidationError:
             response_data = {
@@ -157,20 +174,21 @@ def source_detail(request, source_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.view_datasourcemodel'):
+        if not request.user.has_perm('api.view_sourcemodel'):
             response_data = {
                 'result': 'error',
                 'message': 'User does not have permission to perform this action.'
             }
             return JsonResponse(response_data, status=403)
 
-        source = DataSourceModel.objects.get(id=source_id)
+        source = SourceModel.objects.get(id=source_id)
         if source is not None:
             response_data = {
                 'result': 'success',
                 'data': {
                     'name': source.name,
                     'location': source.location,
+                    'has_header': source.has_header
                 }
             }
             return JsonResponse(response_data, status=200)
@@ -192,7 +210,7 @@ def source_detail(request, source_id):
         """
         
         # Check permissions:
-        if not request.user.has_perm('api.delete_datasourcemodel'):
+        if not request.user.has_perm('api.delete_sourcemodel'):
             response_data = {
                 'result': 'error',
                 'message': 'User does not have permission to perform this action.'
@@ -200,7 +218,7 @@ def source_detail(request, source_id):
             return JsonResponse(response_data, status=403)
         
         # Get the source:
-        source = DataSourceModel.objects.get(id=source_id)
+        source = SourceModel.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now delete it:
             source.delete()
@@ -229,7 +247,7 @@ def source_detail(request, source_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.change_datasourcemodel'):
+        if not request.user.has_perm('api.change_sourcemodel'):
             response_data = {
                 'result': 'error',
                 'message': 'User does not have permission to perform this action.'
@@ -238,7 +256,7 @@ def source_detail(request, source_id):
         
         # Get JSON request body:
         try:
-            json_request = json.loads('json', request.body.decode('utf-8'))
+            json_request = json.loads(request.body.decode('utf-8'))
         except json.JSONDecodeError:
             response_data = {
                 'result': 'error',
@@ -247,40 +265,54 @@ def source_detail(request, source_id):
             return JsonResponse(response_data, status=400)
 
         # Get JSON fields:
-        source_name = json_request['name']
-        if source_name is None:
+        name = json_request['name']
+        if name is None:
             response_data = {
                 'result': 'error',
                 'message': 'Expected `name` field.'
             }
             return JsonResponse(response_data, status=400)
-        elif not isinstance(source_name, str):
+        elif not isinstance(name, str):
             response_data = {
                 'result': 'error',
                 'message': 'Invalid `name` field; expected a string.'
             }
             return JsonResponse(response_data, status=400)
 
-        source_location = json_request['location']
-        if source_name is None:
+        location = json_request['location']
+        if name is None:
             response_data = {
                 'result': 'error',
                 'message': 'Expected `location` field.'
             }
             return JsonResponse(response_data, status=400)
-        elif not isinstance(source_name, str):
+        elif not isinstance(name, str):
             response_data = {
                 'result': 'error',
                 'message': 'Invalid `location` field; expected a string.'
             }
             return JsonResponse(response_data, status=400)
 
+        has_header = json_request['has_header']
+        if has_header is None:
+            response_data = {
+                'result': 'error',
+                'message': 'Expected `has_header` field.'
+            }
+            return JsonResponse(response_data, status=400)
+        elif not isinstance(has_header, bool):
+            response_data = {
+                'result': 'error',
+                'message': 'Invalid `has_header` field; expected a boolean.'
+            }
+            return JsonResponse(response_data, status=400)
+
         # Get the source:
-        source = DataSourceModel.objects.get(id=source_id)
+        source = SourceModel.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now modify it:
             source.name = sourcE_name
-            source.location = source_location
+            source.location = location
             source.save()
             response_data = {
                 'result': 'success',
@@ -301,6 +333,44 @@ def source_detail(request, source_id):
         }
         return JsonResponse(response_data, status=405)
 
+@login_required
+def source_data(request, source_id):
+    """
+    This API end-point is used to fetch the actual data behind a CSV source.
+    """
+    if request.method == 'GET':
+        # Check permissions:
+        if not request.user.has_perm('api.view_sourcemodel'):
+            response_data = {
+                'result': 'error',
+                'message': 'User does not have permission to perform this action.'
+            }
+            return JsonResponse(response_data, status=403)
+
+        # Get the source:
+        source = SourceModel.objects.get(id=source_id)
+        if source is None:
+            response_data = {
+                'result': 'error',
+                'message': f'Source `{source_id}` does not exist.'
+            }
+            return JsonResponse(response_data, status=404)
+        
+        # Get any configurations for the source:
+        configurations = DataSourceConfigModel.objects.filter(source_id=source_id)
+
+        # Read the CSV file:
+        with open(source.location, 'r') as file:
+            # Create a CSV reader object:
+            csv_reader = csv.reader(file)
+
+            # Iterate through each row
+    else:
+        response_data = {
+            'result': 'error',
+            'message': f'Unknown HTTP method: `{request.method}`.'
+        }
+        return JsonResponse(response_data, status=405)
 
 @login_required
 def graph_list(request):
