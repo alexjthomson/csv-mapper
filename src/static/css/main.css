@@ -133,3 +133,12 @@ body {
 .message-item .message-close:hover {
     background: #0004;
 }
+/* tables */
+.table-action-buttons button {
+    margin-right: 8px;
+}
+.table td.fit, 
+.table th.fit {
+    white-space: nowrap;
+    width: 1%;
+}

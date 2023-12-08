@@ -1,5 +1,4 @@
 from django.core.exceptions import ValidationError
-from django.core.serializers import serialize
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -15,6 +14,14 @@ def source_list(request):
         """
         The `GET` method retrieves a list of every source.
         """
+
+        # Check permissions:
+        if not request.user.has_perm('api.view_datasourcemodel'):
+            response_data = {
+                'result': 'error',
+                'message': 'User does not have permission to perform this action.'
+            }
+            return JsonResponse(response_data, status=403)
 
         # Get the sources:
         sources = DataSourceModel.objects.all()
@@ -45,6 +52,14 @@ def source_list(request):
         This expects a JSON body with `source_name` and `source_location`
         fields.
         """
+
+        # Check permissions:
+        if not request.user.has_perm('api.add_datasourcemodel'):
+            response_data = {
+                'result': 'error',
+                'message': 'User does not have permission to perform this action.'
+            }
+            return JsonResponse(response_data, status=403)
         
         # Get the JSON body:
         try:
@@ -93,8 +108,6 @@ def source_list(request):
             return JsonResponse(response_data, status=400)
 
         # Create the source:
-
-        # Create the source:
         try:
             source_instance = DataSourceModel(name=source_name, location=source_location)
             source_instance.save()
@@ -122,10 +135,10 @@ def source_list(request):
             'result': 'error',
             'message': f'Unknown HTTP method: `{request.method}`.'
         }
-        return JsonResponse(response_data, status=400)
+        return JsonResponse(response_data, status=405)
 
 @login_required
-def source_detail(request):
+def source_detail(request, source_id):
     """
     RESTful API endpoint for interacting with a single source.
 
@@ -133,130 +146,166 @@ def source_detail(request):
     method used to access the endpoint.
     """
 
-    # Get the json data:
-    try:
-        request_data = json.loads(request.body.decode('utf-8'))
-    except json.JSONDecodeError:
-        response_data = {
-            'result': 'error',
-            'message': 'Invalid JSON request body.'
-        }
-        return JsonResponse(response_data, status=400)
-
     if request.method == 'GET':
         """
-        The `GET` method will fetch the data from the data-source. This can be
-        used to construct a graph.
+        The `GET` method will fetch a single source.
+
+        If the resource is not found, a 404 response code is returned.
+
+        The user must have permission to view the corresponding model to
+        interact with this API endpoint.
         """
 
-        # Get the source ID:
-        source_id = request_data.get('source_id')
-        if source_id is None:
+        # Check permissions:
+        if not request.user.has_perm('api.view_datasourcemodel'):
             response_data = {
                 'result': 'error',
-                'message': 'No `source_id` provided.'
+                'message': 'User does not have permission to perform this action.'
             }
-            return JsonResponse(response_data, status=400)
-        elif not isinstance(source_id, int):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `source_id`.'
-            }
-            return JsonResponse(response_data, status=400)
-        
-        # Check if transformations should be applied to the source data:
-        transform = request_data.get('transform')
-        if transform is None:
-            transform = False
-        
-        # Get the source data:
-        try:
-            data_source = DataSourceModel.objects.get(id=source_id)
-        except DataSourceModel.DoesNotExist:
-            response_data = {
-                'result': 'error',
-                'message': f'No source found for ID `{source_id}`.'
-            }
-            return JsonResponse(response_data, status=400)
+            return JsonResponse(response_data, status=403)
 
-        # TODO: Get the data at the source here
-        # TODO: Add transformation here
+        source = DataSourceModel.objects.get(id=source_id)
+        if source is not None:
+            response_data = {
+                'result': 'success',
+                'data': {
+                    'name': source.name,
+                    'location': source.location,
+                }
+            }
+            return JsonResponse(response_data, status=200)
+        else:
+            response_data = {
+                'result': 'error',
+                'message': f'Source `{source_id}` does not exist.'
+            }
+            return JsonResponse(response_data, status=404)
+    elif request.method == 'DELETE':
+        """
+        The `DELETE` method will delete a single source.
 
-        response_data = {
-            'result': 'success'
-        }
-        return JsonResponse(response_data, status=200)
+        If the resource is deleted successfully, a 200 response code is
+        returned; otherwise, if the resource is not found, 404 is returned.
+
+        The user must have permission to delete the corresponding model to
+        interact with this API endpoint.
+        """
+        
+        # Check permissions:
+        if not request.user.has_perm('api.delete_datasourcemodel'):
+            response_data = {
+                'result': 'error',
+                'message': 'User does not have permission to perform this action.'
+            }
+            return JsonResponse(response_data, status=403)
+        
+        # Get the source:
+        source = DataSourceModel.objects.get(id=source_id)
+        if source is not None:
+            # The source exists, we can now delete it:
+            source.delete()
+            response_data = {
+                'result': 'success',
+                'message': f'Deleted source `{source_id}`.'
+            }
+            return JsonResponse(response_data, status=200)
+        else:
+            # The source does not exist.
+            response_data = {
+                'result': 'error',
+                'message': f'Source `{source_id}` does not exist.'
+            }
+            return JsonResponse(response_data, status=404)
     elif request.method == 'PUT':
         """
-        The `PUT` method will replace all current representations of the target
-        resource with the request payload. Simply put, this will create or
-        update the CSV resource with the request payload.
+        The `PUT` method updates an entire source. In simple terms, this will
+        replace the source data at an index with new data.
+
+        If the resource is modified successfully, a 200 response code is
+        returned; otherwise, if the resource is not found, 404 is returned.
+
+        The user must have permission to modify the corresponding model to
+        interact with this API endpoint.
         """
 
-        # TODO: Check that the user has permission to perform this action
+        # Check permissions:
+        if not request.user.has_perm('api.change_datasourcemodel'):
+            response_data = {
+                'result': 'error',
+                'message': 'User does not have permission to perform this action.'
+            }
+            return JsonResponse(response_data, status=403)
+        
+        # Get JSON request body:
+        try:
+            json_request = json.loads('json', request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            response_data = {
+                'result': 'error',
+                'message': 'Invalid JSON request body.'
+            }
+            return JsonResponse(response_data, status=400)
 
-        # Get and validate the `source_name`:
-        source_name = request_data.get('source_name')
+        # Get JSON fields:
+        source_name = json_request['name']
         if source_name is None:
             response_data = {
                 'result': 'error',
-                'message': 'No `source_name` provided.'
+                'message': 'Expected `name` field.'
             }
             return JsonResponse(response_data, status=400)
         elif not isinstance(source_name, str):
             response_data = {
                 'result': 'error',
-                'message': 'Invalid `source_name`.'
-            }
-            return JsonResponse(response_data, status=400)
-        
-        # Get and validate the `source_location`:
-        source_location = request_data.get('source_location')
-        if source_location is None:
-            response_data = {
-                'result': 'error',
-                'message': 'No `source_location` provided.'
-            }
-            return JsonResponse(response_data, status=400)
-        elif not isinstance(source_location, str):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `source_location`.'
+                'message': 'Invalid `name` field; expected a string.'
             }
             return JsonResponse(response_data, status=400)
 
-        # Create the source:
-        source_data = {
-            'name': source_name,
-            'location': source_location
-        }
-        try:
-            source_instance = DataSourceModel.objects.get_or_create(name=source_name, defaults=source_data)
-            source_instance.save()
-        except ValidationError:
+        source_location = json_request['location']
+        if source_name is None:
             response_data = {
                 'result': 'error',
-                'message': 'Failed to validate source data.'
+                'message': 'Expected `location` field.'
             }
             return JsonResponse(response_data, status=400)
-        except Exception:
+        elif not isinstance(source_name, str):
             response_data = {
                 'result': 'error',
-                'message': 'Failed to update source.'
+                'message': 'Invalid `location` field; expected a string.'
             }
-            return JsonResponse(response_data, status=500)
+            return JsonResponse(response_data, status=400)
 
-        # Return the success response:
+        # Get the source:
+        source = DataSourceModel.objects.get(id=source_id)
+        if source is not None:
+            # The source exists, we can now modify it:
+            source.name = sourcE_name
+            source.location = source_location
+            source.save()
+            response_data = {
+                'result': 'success',
+                'message': f'Deleted source `{source_id}`.'
+            }
+            return JsonResponse(response_data, status=200)
+        else:
+            # The source does not exist.
+            response_data = {
+                'result': 'error',
+                'message': f'Source `{source_id}` does not exist.'
+            }
+            return JsonResponse(response_data, status=404)
+    else:
         response_data = {
-            'result': 'success',
-            'message': 'The source was updated successfully.'
+            'result': 'error',
+            'message': f'Unknown HTTP method: `{request.method}`.'
         }
-        return JsonResponse(response_data, status=200)
-    elif request.method == 'DELETE':
-        """
-        The `DELETE` method will delete the described source.
-        """
-        # TODO
+        return JsonResponse(response_data, status=405)
+
+
+@login_required
+def graph_list(request):
+    # TODO
+    if request.method == 'GET':
         response_data = {
             'result': 'error',
             'message': 'Not implemented.'
@@ -265,24 +314,22 @@ def source_detail(request):
     else:
         response_data = {
             'result': 'error',
-            'message': f'Unrecognised HTTP request method: `{request.method}`.'
+            'message': f'Unknown HTTP method: `{request.method}`.'
         }
-        return JsonResponse(response_data, status=400)
-
-@login_required
-def graph_list(request):
-    # TODO
-    response_data = {
-        'result': 'error',
-        'message': 'Not implemented.'
-    }
-    return JsonResponse(response_data, status=500)
+        return JsonResponse(response_data, status=405)
 
 @login_required
 def graph_detail(request):
     # TODO
-    response_data = {
-        'result': 'error',
-        'message': 'Not implemented.'
-    }
-    return JsonResponse(response_data, status=500)
+    if request.method == 'GET':
+        response_data = {
+            'result': 'error',
+            'message': 'Not implemented.'
+        }
+        return JsonResponse(response_data, status=500)
+    else:
+        response_data = {
+            'result': 'error',
+            'message': f'Unknown HTTP method: `{request.method}`.'
+        }
+        return JsonResponse(response_data, status=405)
