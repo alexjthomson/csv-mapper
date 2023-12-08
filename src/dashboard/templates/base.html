@@ -14,30 +14,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-dark navbar-expand-lg text-light">
         <div class="container">
-            <a class="navbar-brand" href="#">CSV Mapper</a>
+            <a class="navbar-brand" href="/">CSV Mapper</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto list-unstyled">
+                    {{request.url_name}}
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+                        <a class="nav-link{% if request.path == '/' %} active{% endif %}" aria-current="page" href="/">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Graphs</a>
+                        <a class="nav-link{% if request.path == '/graphs' %} active{% endif %}" href="/graphs">Graphs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">CSV Sources</a>
+                        <a class="nav-link{% if request.path == '/sources' %} active{% endif %}" href="/sources">Sources</a>
                     </li>
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin">Admin</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <div class="nav-profile d-flex align-items-center justify-content-center">
                     <div class="grid text-end">
                         <div class="row">
-                            <span class="col profile-username">{{username}}</span>
+                            <span class="col profile-username">{{ user.username }}</span>
                         </div>
                         <div class="row">
                             <div class="col" style="margin-top: -10px;">
