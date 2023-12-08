@@ -28,7 +28,7 @@ class DataSourceModel(models.Model):
         db_table = 'data_source'
         db_table_comment = 'Describes the location of CSV data.'
 
-    name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128, unique=False)
     location = models.CharField(max_length=256)
 
 class GraphModel(models.Model):
@@ -56,7 +56,7 @@ class GraphModel(models.Model):
         db_table = 'graph'
         db_table_comment = 'Contains graphs'
 
-    name = models.CharField(max_length=128, unique=True)
+    name = models.CharField(max_length=128, unique=False)
     data_source_id = models.ForeignKey(DataSourceModel, on_delete=models.CASCADE)
 
 class DataColumnConfigModel(models.Model):

@@ -32,8 +32,8 @@
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 const data = await response.json();
-                console.log(data);
                 const tableBody = $('#source-table');
+                tableBody.empty();
                 $.each(data.data, function(index, entry) {
                     var newRow = $('<tr>').append(
                         $('<td>').text(entry.id),
@@ -82,7 +82,6 @@
             formData.forEach((value, key) => {
                 formDataJson[key] = value;
             });
-            console.log(formDataJson);
             try {
                 const response = await fetch('/api/source/', {
                     method: 'POST',
@@ -98,7 +97,8 @@
                 }
 
                 const responseData = await response.json();
-                console.log(responseData);
+
+                await updateSources();
 
                 $('#create-source-modal').modal('hide');
             } catch (error) {
