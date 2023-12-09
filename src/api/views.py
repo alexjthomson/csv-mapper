@@ -19,7 +19,7 @@ def clean_csv_value(value):
     """
     return ''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip()
 
-def success_response(data, status, message=None, safe=True):
+def success_response(data, status, message=None):
     """
     Constructs a successful JSON response body.
 
@@ -27,8 +27,6 @@ def success_response(data, status, message=None, safe=True):
     - data (context dependant): Payload for the response data.
     - status (int): HTTP response code.
     - message (str, optional): Optional success message.
-    - safe: If set to False, any object can be passed for serialisation
-      (otherwise only dict instances are allowed).
     """
     response_data = { 'result': 'success' }
     if message != None:
@@ -96,6 +94,13 @@ def error_response_graph_not_found(graph_id):
     """
     return error_response(f'Graph `{graph_id}` does not exist.', 404)
 
+def error_response_graph_dataset_not_found(dataset_id):
+    """
+    Constructs an error response that indicates that the specified graph dataset
+    does not exist.
+    """
+    return error_response(f'Graph dataset `{dataset_id}` does not exist.', 404)
+
 @login_required
 def source_list(request):
     """
@@ -135,7 +140,7 @@ def source_list(request):
             sources_json.append(source_data)
 
         # Construct and return the response data:
-        return success_response(sources_json, 200, safe=False)
+        return success_response(sources_json, 200)
     elif request.method == 'POST':
         """
         The `POST` method will create a new source.
@@ -548,11 +553,74 @@ def graph_detail(request, graph_id):
 
 @login_required
 def graph_dataset_list(request, graph_id):
-    return error_response_http_method_unsupported(request.method)
+    """
+    RESTful API endpoint for interacting with the datasets that belong to a
+    graph.
+    """
+
+    if request.method == 'GET':
+        """
+        The `GET` method is used to get every dataset that belongs to a graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('view_graphdataset'):
+            return error_response_no_perms()
+        
+        # Get the datasets that belong to the graph:
+        datasets = GraphDataset.objects.filter(graph=graph_id)
+
+        # Create a JSON array to write each dataset into:
+        datasets_json = []
+
+        # Iterate each dataset:
+        for dataset in datasets:
+            datasets_json.append({
+                'id': dataset.id,
+                'label': dataset.label,
+                'plot_type': dataset.plot_type,
+                'is_axis': dataset.is_axis,
+                'source_name': dataset.source.name,
+                'source_id': dataset.source.id,
+                'column_id': dataset.column
+            })
+        
+        # Construct and return the response data:
+        return success_response(datasets_json, 200)
+    else:
+        return error_response_http_method_unsupported(request.method)
 
 @login_required
 def graph_dataset_detail(request, graph_id, dataset_id):
-    return error_response_http_method_unsupported(request.method)
+    """
+    RESTful API endpoint for interacting with a single datasets.
+    """
+
+    if request.method == 'GET':
+        """
+        The `GET` method is used to get information about a dataset that belongs
+        to the specified graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('view_graphdataset'):
+            return error_response_no_perms()
+        
+        # Get the dataset:
+        dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
+        if dataset == None:
+            return error_response_graph_dataset_not_found(dataset_id)
+        else:
+            response_data = {
+                'label': dataset.label,
+                'plot_type': dataset.plot_type,
+                'label': dataset.label,
+                'is_axis': dataset.is_axis,
+                'source_name': dataset.source.name,
+                'source_id': dataset.source.id,
+                'column_id': dataset.column
+            }
+            return success_response(response_data, 200)
 
 @login_required
 def graph_data(request):

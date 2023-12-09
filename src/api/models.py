@@ -142,6 +142,7 @@ class GraphDataset(models.Model):
 
         This maps a database value to a chartJs value.
         """
+        NONE = 'none', 'none'
         LINE = 'line', 'line'
         BAR = 'bar', 'bar'
         # TODO: Uncomment the below options as support is added:
