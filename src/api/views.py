@@ -19,6 +19,69 @@ def clean_csv_value(value):
     """
     return ''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip()
 
+def success_response(data, status, message=None, safe=True):
+    """
+    Constructs a successful JSON response body.
+
+    Arguments:
+    - data (context dependant): Payload for the response data.
+    - status (int): HTTP response code.
+    - message (str, optional): Optional success message.
+    - safe: If set to False, any object can be passed for serialisation
+      (otherwise only dict instances are allowed).
+    """
+    response_data = { 'result': 'success' }
+    if message != None:
+        response_data.append('message', message)
+    if data != None:
+        response_data.append('data', data)
+    return JsonResponse(response_data, status=status)
+
+def error_response(message, status):
+    """
+    Constructs an error JSON response body.
+
+    Arguments:
+    - message (str): Error message.
+    - status (int): HTTP response code.
+    """
+    return JsonResponse({ 'result': 'error', 'message': message }, status=status)
+
+def error_response_no_perms():
+    """
+    Constructs an error response that indicates the user does not have the
+    correct permissions to perform an action.
+    """
+    return error_response('User does not have permission to perform this action.', 403)
+
+def error_response_invalid_json_body():
+    """
+    Constructs an error response that indicates that the JSON response body sent
+    by the client is invalid.
+    """
+    return error_response('Invalid JSON request body.', 400)
+
+def error_response_expected_field(field_name):
+    """
+    Constructs an error response that indicates that a field was expected but
+    was not found.
+    """
+    return error_response(f'Expected `{field_name}` field was not found.', 400)
+
+def error_response_invalid_field(field_name):
+    """
+    Constructs an error response that indicates that a field is invalid and
+    cannot be consumed by the API.
+    """
+    return error_response(f'Expected `{field_name}` field has an invalid value.', 400)
+
+def error_response_http_method_unsupported(http_method):
+    """
+    Constructs an error response that indicates that the HTTP method used to
+    access the API endpoint is not a supported method.
+    """
+    return error_response(f'Unsupported HTTP method: `{http_method}`.', 405)
+
 @login_required
 def source_list(request):
     """
@@ -31,11 +94,7 @@ def source_list(request):
 
         # Check permissions:
         if not request.user.has_perm('api.view_sourcemodel'):
-            response_data = {
-                'result': 'error',
-                'message': 'User does not have permission to perform this action.'
-            }
-            return JsonResponse(response_data, status=403)
+            return error_response_no_perms()
 
         # Get the sources:
         sources = SourceModel.objects.all()
@@ -55,11 +114,7 @@ def source_list(request):
             sources_json.append(source_data)
 
         # Construct and return the response data:
-        response_data = {
-            'result': 'success',
-            'data': sources_json
-        }
-        return JsonResponse(response_data, safe=False, status=200)
+        return success_response(sources_json, 200, safe=False)
     elif request.method == 'POST':
         """
         The `POST` method will create a new source.
@@ -70,102 +125,48 @@ def source_list(request):
 
         # Check permissions:
         if not request.user.has_perm('api.add_sourcemodel'):
-            response_data = {
-                'result': 'error',
-                'message': 'User does not have permission to perform this action.'
-            }
-            return JsonResponse(response_data, status=403)
+            return error_response_no_perms()
         
         # Get JSON request body:
         try:
             json_request = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError:
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid JSON request body.'
-            }
-            return JsonResponse(response_data, status=400)
         except:
-            response_data = {
-                'result': 'error',
-                'message': 'Failed to parse JSON request body.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_json_body()
         
         # Get and validate the `name`:
         name = json_request['name']
         if name is None:
-            response_data = {
-                'result': 'error',
-                'message': 'No `name` provided.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_expected_field('name')
         elif not isinstance(name, str):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `name`.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_field('name')
         
         # Get and validate the `location`:
         location = json_request['location']
         if location is None:
-            response_data = {
-                'result': 'error',
-                'message': 'No `location` provided.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_expected_field('location')
         elif not isinstance(location, str):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `location`.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_field('location')
 
         # Get and validate the `has_header`:
         has_header = json_request['has_header']
         if has_header is None:
-            response_data = {
-                'result': 'error',
-                'message': 'No `has_header` provided.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_expected_field('has_header')
         elif not isinstance(has_header, bool):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `has_header`.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_field('has_header')
 
         # Create the source:
         try:
             source_instance = SourceModel(name=name, location=location, has_header=has_header)
             source_instance.save()
         except ValidationError:
-            response_data = {
-                'result': 'error',
-                'message': 'Failed to validate source data.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response('Failed to validate source data.', 400)
         except Exception:
-            response_data = {
-                'result': 'error',
-                'message': f'Failed to create source.'
-            }
-            return JsonResponse(response_data, status=500)
+            return error_response('Failed to create source.', 500)
 
         # Return the success response:
-        response_data = {
-            'result': 'success',
-            'message': 'The source was created successfully.'
-        }
-        return JsonResponse(response_data, status=200)
+        return success_response(None, 200, message='The source was created successfully.')
     else:
-        response_data = {
-            'result': 'error',
-            'message': f'Unknown HTTP method: `{request.method}`.'
-        }
-        return JsonResponse(response_data, status=405)
+        return error_response_http_method_unsupported(request.method)
 
 @login_required
 def source_detail(request, source_id):
