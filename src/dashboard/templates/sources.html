@@ -17,7 +17,6 @@
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
                     <th scope="col">Display Name</th>
                     <th scope="col">Location</th>
                     <th scope="col">Has Header</th>
@@ -40,7 +39,6 @@
                     $.each(data.data, function(index, entry) {
                         tableBody.append(
                             $('<tr>').append(
-                                $('<td>').text(entry.id),
                                 $('<td>').text(entry.name),
                                 $('<td>').text(entry.location),
                                 $('<td>').append(
