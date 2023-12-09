@@ -32,9 +32,9 @@ def success_response(data, status, message=None, safe=True):
     """
     response_data = { 'result': 'success' }
     if message != None:
-        response_data.append('message', message)
+        response_data['message'] = message
     if data != None:
-        response_data.append('data', data)
+        response_data['data'] = data
     return JsonResponse(response_data, status=status)
 
 def error_response(message, status):
