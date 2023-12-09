@@ -82,6 +82,13 @@ def error_response_http_method_unsupported(http_method):
     """
     return error_response(f'Unsupported HTTP method: `{http_method}`.', 405)
 
+def error_response_source_not_found(source_id):
+    """
+    Constructs an error response that indicates that the specified source does
+    not exist.
+    """
+    return error_response(f'Source `{source_id}` does not exist.', 404)
+
 @login_required
 def source_list(request):
     """
@@ -189,29 +196,13 @@ def source_detail(request, source_id):
 
         # Check permissions:
         if not request.user.has_perm('api.view_sourcemodel'):
-            response_data = {
-                'result': 'error',
-                'message': 'User does not have permission to perform this action.'
-            }
-            return JsonResponse(response_data, status=403)
+            return error_response_no_perms()
 
         source = SourceModel.objects.get(id=source_id)
         if source is not None:
-            response_data = {
-                'result': 'success',
-                'data': {
-                    'name': source.name,
-                    'location': source.location,
-                    'has_header': source.has_header
-                }
-            }
-            return JsonResponse(response_data, status=200)
+            return success_response({ 'name': source.name, 'location': source.location, 'has_header': source.has_header }, 200)
         else:
-            response_data = {
-                'result': 'error',
-                'message': f'Source `{source_id}` does not exist.'
-            }
-            return JsonResponse(response_data, status=404)
+            return error_response_source_not_found(source_id)
     elif request.method == 'DELETE':
         """
         The `DELETE` method will delete a single source.
@@ -225,29 +216,16 @@ def source_detail(request, source_id):
         
         # Check permissions:
         if not request.user.has_perm('api.delete_sourcemodel'):
-            response_data = {
-                'result': 'error',
-                'message': 'User does not have permission to perform this action.'
-            }
-            return JsonResponse(response_data, status=403)
+            return error_response_no_perms()
         
         # Get the source:
         source = SourceModel.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now delete it:
             source.delete()
-            response_data = {
-                'result': 'success',
-                'message': f'Deleted source `{source_id}`.'
-            }
-            return JsonResponse(response_data, status=200)
+            return success_response(f'Deleted source `{source_id}`.', 200)
         else:
-            # The source does not exist.
-            response_data = {
-                'result': 'error',
-                'message': f'Source `{source_id}` does not exist.'
-            }
-            return JsonResponse(response_data, status=404)
+            return error_response_source_not_found(source_id)
     elif request.method == 'PUT':
         """
         The `PUT` method updates an entire source. In simple terms, this will
@@ -262,64 +240,32 @@ def source_detail(request, source_id):
 
         # Check permissions:
         if not request.user.has_perm('api.change_sourcemodel'):
-            response_data = {
-                'result': 'error',
-                'message': 'User does not have permission to perform this action.'
-            }
-            return JsonResponse(response_data, status=403)
+            return error_response_no_perms()
         
         # Get JSON request body:
         try:
             json_request = json.loads(request.body.decode('utf-8'))
         except json.JSONDecodeError:
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid JSON request body.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_json_body()
 
         # Get JSON fields:
         name = json_request['name']
         if name is None:
-            response_data = {
-                'result': 'error',
-                'message': 'Expected `name` field.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_expected_field('name')
         elif not isinstance(name, str):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `name` field; expected a string.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_field('name')
 
         location = json_request['location']
         if name is None:
-            response_data = {
-                'result': 'error',
-                'message': 'Expected `location` field.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_expected_field('location')
         elif not isinstance(name, str):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `location` field; expected a string.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_field('location')
 
         has_header = json_request['has_header']
         if has_header is None:
-            response_data = {
-                'result': 'error',
-                'message': 'Expected `has_header` field.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_expected_field('has_header')
         elif not isinstance(has_header, bool):
-            response_data = {
-                'result': 'error',
-                'message': 'Invalid `has_header` field; expected a boolean.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response_invalid_field('has_header')
 
         # Get the source:
         source = SourceModel.objects.get(id=source_id)
@@ -329,24 +275,11 @@ def source_detail(request, source_id):
             source.location = location
             source.has_header = has_header
             source.save()
-            response_data = {
-                'result': 'success',
-                'message': f'Updated source `{source_id}`.'
-            }
-            return JsonResponse(response_data, status=200)
+            return success_response(None, 200, message=f'Updated source `{source_id}`.')
         else:
-            # The source does not exist.
-            response_data = {
-                'result': 'error',
-                'message': f'Source `{source_id}` does not exist.'
-            }
-            return JsonResponse(response_data, status=404)
+            return error_response_source_not_found(source_id)
     else:
-        response_data = {
-            'result': 'error',
-            'message': f'Unknown HTTP method: `{request.method}`.'
-        }
-        return JsonResponse(response_data, status=405)
+        return error_response_http_method_unsupported(request.method)
 
 @login_required
 def source_data(request, source_id):
@@ -356,30 +289,18 @@ def source_data(request, source_id):
     if request.method == 'GET':
         # Check permissions:
         if not request.user.has_perm('api.view_sourcemodel'):
-            response_data = {
-                'result': 'error',
-                'message': 'User does not have permission to perform this action.'
-            }
-            return JsonResponse(response_data, status=403)
+            return error_response_no_perms()
 
         # Get the source:
         source = SourceModel.objects.get(id=source_id)
         if source is None:
-            response_data = {
-                'result': 'error',
-                'message': f'Source `{source_id}` does not exist.'
-            }
-            return JsonResponse(response_data, status=404)
+            return error_response_source_not_found(source_id)
 
         # Parse the URL to the source:
         try:
             source_url = urlparse(source.location)
         except URLError:
-            response_data = {
-                'result': 'error',
-                'message': f'Cannot parse location: `{source.location}`.'
-            }
-            return JsonResponse(response_data, status=400)
+            return error_response(f'Cannot parse location: `{source.location}`.', 400)
         
         # Read the CSV data from the source:
         try:
@@ -390,17 +311,9 @@ def source_data(request, source_id):
                 with open(source_url.path, 'r') as file:
                     csv_content = file.read()
             else:
-                response_data = {
-                    'result': 'error',
-                    'message': f'Cannot open location because `{source_url.scheme}` is not a supported URL scheme.'
-                }
-                return JsonResponse(response_data, status=400)
-        except Exception as e:
-            response_data = {
-                'result': 'error',
-                'message': f'Failed to read CSV data from location: `{source.location}`. {e}'
-            }
-            return JsonResponse(response_data, status=400)
+                return error_response(f'Cannot open location because `{source_url.scheme}` is not a supported URL scheme.', 400)
+        except Exception:
+            return error_response(f'Failed to read CSV data from location: `{source.location}`.', 400)
 
         # Convert the CSV content into a CSV file:
         csv_file = StringIO(csv_content)
@@ -417,11 +330,7 @@ def source_data(request, source_id):
         # valid by checking if there are no columns:
         column_count = len(current_row)
         if column_count == 0:
-            response_data = {
-                'result': 'error',
-                'message': 'CSV source has zero columns.'
-            }
-            return JsonResponse(response_data, status=406)
+            return error_response('CSV source has zero columns.', 406)
 
         # Construct `columns`:
         columns = []
@@ -465,17 +374,9 @@ def source_data(request, source_id):
             current_row = next(csv_reader, None)
         
         # Return the CSV data as JSON:
-        response_data = {
-            'result': 'success',
-            'data': columns
-        }
-        return JsonResponse(response_data, status=200)
+        return success_response(columns, 200)
     else:
-        response_data = {
-            'result': 'error',
-            'message': f'Unknown HTTP method: `{request.method}`.'
-        }
-        return JsonResponse(response_data, status=405)
+        return error_response_http_method_unsupported(request.method)
 
 @login_required
 def graph_list(request):
