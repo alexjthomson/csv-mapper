@@ -579,6 +579,64 @@ def graph_dataset_list(request, graph_id):
         
         # Construct and return the response data:
         return success_response(datasets_json, 200)
+    elif request.method == 'POST':
+        """
+        The `POST` method is used to create a new dataset for a graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('add_graphdataset'):
+            return error_response_no_perms()
+        
+        # Get JSON request body:
+        try:
+            json_request = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return error_response_invalid_json_body()
+        
+        # Get JSON fields:
+        label = json_request.get('label')
+        if label is None:
+            return error_response_expected_field('label')
+        elif not isinstance(label, str):
+            return error_response_invalid_field('label')
+        plot_type = json_request.get('plot_type')
+        if plot_type is None:
+            return error_response_expected_field('plot_type')
+        elif not isinstance(plot_type, str):
+            return error_response_invalid_field('plot_type')
+        is_axis = json_request.get('is_axis')
+        if is_axis is None:
+            return error_response_expected_field('is_axis')
+        elif not isinstance(is_axis, bool):
+            return error_response_invalid_field('is_axis')
+        source_id = json_request.get('source_id')
+        if source_id is None:
+            return error_response_expected_field('source_id')
+        elif not isinstance(source_id, int):
+            return error_response_invalid_field('source_id')
+        column_id = json_request.get('column_id')
+        if column_id is None:
+            return error_response_expected_field('column_id')
+        elif not isinstance(column_id, int):
+            return error_response_invalid_field('column_id')
+
+        # Create the new dataset:
+        try:
+            dataset = GraphDataset(
+                graph=Graph.objects.get(id=graph_id),
+                plot_type=plot_type,
+                label=label,
+                is_axis=is_axis,
+                source=Source.objects.get(id=source_id),
+                column=column_id
+            )
+            dataset.save()
+        except ValidationError:
+            return error_response('Failed to validate dataset data.', 400)
+        except Exception:
+            return error_response('Failed to create dataset.', 500)
+        return success_response('Created dataset.', 200)
     else:
         return error_response_http_method_unsupported(request.method)
 
