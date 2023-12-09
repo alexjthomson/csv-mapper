@@ -267,19 +267,15 @@
                                 <label for="edit-graph-dataset-plot" class="form-label">Dataset Plot</label>
                                 <select id="edit-graph-dataset-plot" name="plot_type" class="form-select" aria-describedby="edit-graph-dataset-plot-help">
                                     <option value="none">None</option>
+                                    <option value="axis">Axis</option>
                                     <option value="line">Line</option>
                                     <option value="bar">Bar</option>
                                 </select>
                                 <div id="edit-graph-dataset-plot-help" class="form-text">Type of plot to use for the dataset.</div>
                             </div>
                             <div class="mb-3">
-                                <label for="edit-graph-dataset-is-axis" class="form-label mb-0">Axis Dataset</label>
-                                <input id="edit-graph-dataset-is-axis" name="has_header" type="checkbox" class="form-check-input" aria-describedby="edit-graph-dataset-is-axis" style="margin-left: 6px; margin-top: 5px;"/>
-                                <div id="edit-graph-dataset-is-axis-help" class="form-text mt-0">Does this dataset contain axis labels? Only one dataset for a graph should be used as an axis dataset.</div>
-                            </div>
-                            <div class="mb-3">
                                 <label for="edit-graph-dataset-source" class="form-label">Dataset Source</label>
-                                <select id="edit-graph-dataset-source" name="plot_type" class="form-select" aria-describedby="edit-graph-dataset-source-help"></select>
+                                <select id="edit-graph-dataset-source" name="plot_type" class="form-select" onchange="updateSourceColumns()" aria-describedby="edit-graph-dataset-source-help"></select>
                                 <div id="edit-graph-dataset-source-help" class="form-text">Source that contains the dataset.</div>
                             </div>
                             <div class="mb-3">
@@ -300,20 +296,39 @@
         </div>
     </div>
 </div>
+{% if perms.api.delete_graphdataset %}
+<div id="delete-graph-dataset-modal" class="modal fade" tabindex="-1" aria-labelledby="delete-graph-dataset-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 id="delete-graph-dataset-label" class="modal-title fw-bold">Delete Dataset</h5>
+                <button type="button" class="btn-close" aria-label="Close" onclick="cancelDeleteGraphDataset()"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure that you want to delete the <span id="delete-graph-dataset-name" class="text-danger"></span> dataset?</p>
+                <form id="delete-graph-dataset-form">
+                    <button id="delete-graph-dataset-modal-button" type="button" class="btn btn-danger" onclick="">Delete Dataset</button>
+                    <button type="button" class="btn btn-secondary" aria-label="Cancel" onclick="cancelDeleteGraphDataset()">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 <script>
-    async function setEditModalInfo(graph_id) {
+    async function setEditModalInfo(graphId) {
         $('#edit-graph-error').hide();
         $('#edit-graph-success').hide();
         $('#edit-graph-name').val('');
         $('#edit-graph-description').val('');
-        $('#edit-graph-submit-button').attr('onclick', `submitEditGraphForm(${graph_id})`);
+        $('#edit-graph-submit-button').attr('onclick', `submitEditGraphForm(${graphId})`);
         $('#edit-graph-dataset-table').empty();
         clearGraphDatasetEditor();
-        {% if perms.api.delete_source %}
+        {% if perms.api.add_graphdataset %}
         await showAddGraphDatasetEditor();
         {% endif %}
         try {
-            const response = await fetch(`/api/graph/${graph_id}/`, {
+            const response = await fetch(`/api/graph/${graphId}/`, {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
@@ -330,9 +345,9 @@
         } catch (error) {
             console.error('Error fetching graph data: ', error);
         }
-        await updateGraphDatasetTable(graph_id);
+        await updateGraphDatasetTable(graphId);
     }
-    async function submitEditGraphForm(graph_id) {
+    async function submitEditGraphForm(graphId) {
         $('#edit-graph-error').hide();
         const formData = $('#edit-graph-form').serializeArray();
         formDataJson = {};
@@ -341,7 +356,7 @@
         });
         formDataJson['has_header'] = formDataJson['has_header'] == 'on'
         try {
-            const response = await fetch(`/api/graph/${graph_id}/`, {
+            const response = await fetch(`/api/graph/${graphId}/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -361,10 +376,10 @@
             $('#edit-graph-error').text(error).show();
         }
     }
-    async function updateGraphDatasetTable(graph_id) {
+    async function updateGraphDatasetTable(graphId) {
         $('#edit-graph-dataset-table').empty();
         try {
-            const response = await fetch(`/api/graph/${graph_id}/dataset/`, {
+            const response = await fetch(`/api/graph/${graphId}/dataset/`, {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
@@ -382,19 +397,19 @@
                             $('<td>').addClass('fit').append(
                                 $('<div>')
                                     .addClass('table-action-buttons')
-                                    {% if perms.api.change_source %}
+                                    {% if perms.api.change_graphdataset %}
                                     .append(
                                         $('<button>')
                                             .addClass('btn btn-primary rounded-pill fw-bold')
-                                            .attr('onclick', `editGraphDataSet(${graph_id}, ${entry.id})`)
+                                            .attr('onclick', `editGraphDataSet(${graphId}, ${entry.id})`)
                                             .text('Edit')
                                     )
                                     {% endif %}
-                                    {% if perms.api.delete_source %}
+                                    {% if perms.api.delete_graphdataset %}
                                     .append(
                                         $('<button>')
                                             .addClass('btn btn-danger rounded-pill fw-bold')
-                                            .attr('onclick', `deleteGraphDataSet(${graph_id}, ${entry.id})`)
+                                            .attr('onclick', `deleteGraphDataSetConfirm(${graphId}, ${entry.id}, '${entry.label}')`)
                                             .text('Delete')
                                     )
                                     {% endif %}
@@ -408,12 +423,12 @@
             $('#edit-graph-dataset-error').text(error).show();
         }
     }
-    {% if perms.api.add_source or perms.api.change_source %}
+    {% if perms.api.add_graphdataset or perms.api.change_graphdataset %}
     function clearGraphDatasetEditor() {
         $('#edit-graph-dataset-error').hide();
         $('#edit-graph-dataset-success').hide();
         $('#edit-graph-dataset-label').val('');
-        $('#edit-graph-dataset-plot').val('None');
+        $('#edit-graph-dataset-plot').val('none');
         $('#edit-graph-dataset-source').empty().val('');
         $('#edit-graph-dataset-source-column').empty().val('');
         $('#edit-graph-dataset-is-axis').prop('checked', false)
@@ -421,25 +436,26 @@
         $('#edit-graph-dataset-cancel-button').hide();
     }
     function showGraphDatasetButton(text, onclick) {
-        $('#edit-graph-dataset-submit-button').prop('onclick', onclick).text(text).show();
+        $('#edit-graph-dataset-submit-button').attr('onclick', onclick).text(text).show();
     }
     async function updateGraphDatasetEditor() {
         $('#edit-graph-dataset-error').hide();
         $('#edit-graph-dataset-success').hide();
+        {% if perms.api.view_source %}
         const sources = $('#edit-graph-dataset-source').empty().val('');
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
         try {
-            var response = await fetch('/api/source/', {
+            const response = await fetch('/api/source/', {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
                 }
             });
-            var jsonResponse = await response.json();
+            const jsonResponse = await response.json();
             if (jsonResponse.result != 'success') {
                 $('#edit-graph-dataset-error').text(jsonResponse.message).show();
             } else {
-                var data = jsonResponse.data;
+                const data = jsonResponse.data;
                 if (data.length > 0) {
                     $.each(data, function(index, source) {
                         sources.append(
@@ -448,53 +464,66 @@
                     });
                     const default_source = data[0].id;
                     sources.val(default_source);
-                    response = await fetch(`/api/source/${default_source}/data/`, {
-                        method: 'GET',
-                        headers: {
-                            'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                        }
-                    });
-                    jsonResponse = await response.json();
-                    if (jsonResponse.result != 'success') {
-                        $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-                    } else {
-                        data = jsonResponse.data;
-                        $.each(data, function(index, column) {
-                            sourceColumns.append(
-                                $('<option>').val(index).text(column.name)
-                            );
-                        });
-                    }
+                    await updateSourceColumns();
                 }
             }
         } catch (error) {
             console.error('Error fetching dataset data: ', error);
             $('#edit-graph-dataset-error').text(error).show();
         }
+        {% endif %}
+    }
+    async function updateSourceColumns() {
+        const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
+        {% if perms.api.view_source %}
+        const selectedSource = $('#edit-graph-dataset-source').find(":selected").val();
+        try {
+            const response = await fetch(`/api/source/${selectedSource}/data/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                }
+            });
+            const jsonResponse = await response.json();
+            if (jsonResponse.result != 'success') {
+                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
+            } else {
+                const data = jsonResponse.data;
+                $.each(data, function(index, column) {
+                    sourceColumns.append(
+                        $('<option>').val(index).text(column.name != null ? column.name : `Column ${index}`)
+                    );
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching dataset data: ', error);
+            $('#edit-graph-dataset-error').text(error).show();
+        }
+        {% endif %}
     }
     {% endif %}
-    {% if perms.api.add_source %}
+    {% if perms.api.add_graphdataset %}
     async function showAddGraphDatasetEditor() {
         clearGraphDatasetEditor();
         await updateGraphDatasetEditor();
-        showGraphDatasetButton('Add Source', 'submitAddGraphDataSet()');
+        showGraphDatasetButton('Add Dataset', 'submitAddGraphDataSet()');
     }
-    async function submitAddGraphDataSet(graph_id, dataset_id) {
+    async function submitAddGraphDataSet(graphId, datasetId) {
         
     }
     {% endif %}
-    {% if perms.api.edit_source %}
+    {% if perms.api.edit_graphdataset %}
     async function cancelGraphDatasetEditor() {
         clearGraphDatasetEditor();
-        {% if perms.api.add_source %}
+        {% if perms.api.add_graphdataset %}
         await showAddGraphDatasetEditor();
         {% endif %}
     }
-    async function editGraphDataSet(graph_id, dataset_id) {
+    async function editGraphDataSet(graphId, datasetId) {
         clearGraphDatasetEditor();
         await updateGraphDatasetEditor();
         try {
-            const response = await fetch(`/api/graph/${graph_id}/dataset/${dataset_id}/`, {
+            const response = await fetch(`/api/graph/${graphId}/dataset/${datasetId}/`, {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
@@ -506,11 +535,10 @@
             } else {
                 const data = jsonResponse.data;
                 $('#edit-graph-dataset-label').val(data.label).focus();
-                $('#edit-graph-dataset-plot').val(data.plot_type);
+                $('#edit-graph-dataset-plot').val(data.is_axis ? "axis" : data.plot_type);
                 $('#edit-graph-dataset-source').val(data.source_id);
                 $('#edit-graph-dataset-source-column').val(data.column_id);
-                $('#edit-graph-dataset-is-axis').prop('checked', data.is_axis);
-                showGraphDatasetButton('Update Dataset', 'submitEditGraphDataSet');
+                showGraphDatasetButton('Update Dataset', `submitEditGraphDataSet(${graphId}, ${datasetId})`);
                 $('#edit-graph-dataset-cancel-button').show();
             }
         } catch (error) {
@@ -518,13 +546,71 @@
             $('#edit-graph-dataset-error').text(error).show();
         }
     }
-    async function submitEditGraphDataSet(graph_id, dataset_id) {
-        
+    async function submitEditGraphDataSet(graphId, datasetId) {
+        const datasetPlot = $('#edit-graph-dataset-plot').val();
+        const isAxis = datasetPlot == 'axis';
+        const requestBody = {
+            label: $('#edit-graph-dataset-label').val(),
+            plot_type: isAxis ? 'none' : datasetPlot,
+            is_axis: isAxis,
+            source_id: parseInt($('#edit-graph-dataset-source').val()),
+            column_id: parseInt($('#edit-graph-dataset-source-column').val())
+        }
+        try {
+            const response = await fetch(`/api/graph/${graphId}/dataset/${datasetId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                },
+                body: JSON.stringify(requestBody)
+            });
+            const jsonResponse = await response.json();
+            if (!response.ok) {
+                console.error(jsonResponse.message);
+                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
+            } else {
+                $('#edit-graph-dataset-success').text('Successfully updated dataset.').show();
+            }
+            await updateGraphDatasetTable(graphId);
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+            $('#edit-graph-dataset-error').text(error).show();
+        }
     }
     {% endif %}
-    {% if perms.api.delete_source %}
-    async function deleteGraphDataSet(graph_id, dataset_id) {
-        
+    {% if perms.api.delete_graphdataset %}
+    async function deleteGraphDataSetConfirm(graphId, datasetId, dataset_label) {
+        $('#delete-graph-dataset-name').text(dataset_label);
+        $('#delete-graph-dataset-modal-button').attr('onclick', `deleteGraphDataSet(${graphId}, ${datasetId})`)
+        $('#edit-graph-modal').modal('hide');
+        $('#delete-graph-dataset-modal').modal('show');
+    }
+    async function deleteGraphDataSet(graphId, datasetId) {
+        try {
+            const response = await fetch(`/api/graph/${graphId}/dataset/${datasetId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                },
+            });
+            const jsonResponse = await response.json();
+            if (!response.ok) {
+                console.error(jsonResponse.message);
+                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
+            } else {
+                $('#edit-graph-dataset-success').text('Successfully deleted dataset.').show();
+            }
+            await updateGraphDatasetTable(graphId);
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+            $('#edit-graph-dataset-error').text(error).show();
+        }
+        cancelDeleteGraphDataset();
+    }
+    function cancelDeleteGraphDataset() {
+        $('#delete-graph-dataset-modal').modal('hide');
+        $('#edit-graph-modal').modal('show');
     }
     {% endif %}
 </script>
@@ -540,9 +626,9 @@
             <div class="modal-body">
                 <p>Are you sure that you want to delete <span id="delete-graph-graph-name" class="text-danger">this graph</span>?</p>
                 <form id="delete-graph-form">
-                    <input id="delete-graph-graph-id" name="graph_id" type="hidden"/>
+                    <input id="delete-graph-graph-id" name="graphId" type="hidden"/>
                     <button type="button" class="btn btn-danger" onclick="submitDeleteGraphForm()">Delete Graph</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
                 </form>
             </div>
         </div>
@@ -560,7 +646,6 @@
             const response = await fetch(`/api/graph/${graphId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
                 },
             });

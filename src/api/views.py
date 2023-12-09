@@ -156,22 +156,17 @@ def source_list(request):
         except:
             return error_response_invalid_json_body()
         
-        # Get and validate the `name`:
-        name = json_request['name']
+        name = json_request.get('name')
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-        
-        # Get and validate the `location`:
-        location = json_request['location']
+        location = json_request.get('location')
         if location is None:
             return error_response_expected_field('location')
         elif not isinstance(location, str):
             return error_response_invalid_field('location')
-
-        # Get and validate the `has_header`:
-        has_header = json_request['has_header']
+        has_header = json_request.get('has_header')
         if has_header is None:
             return error_response_expected_field('has_header')
         elif not isinstance(has_header, bool):
@@ -262,19 +257,17 @@ def source_detail(request, source_id):
             return error_response_invalid_json_body()
 
         # Get JSON fields:
-        name = json_request['name']
+        name = json_request.get('name')
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-
-        location = json_request['location']
+        location = json_request.get('location')
         if name is None:
             return error_response_expected_field('location')
         elif not isinstance(name, str):
             return error_response_invalid_field('location')
-
-        has_header = json_request['has_header']
+        has_header = json_request.get('has_header')
         if has_header is None:
             return error_response_expected_field('has_header')
         elif not isinstance(has_header, bool):
@@ -444,13 +437,12 @@ def graph_list(request):
             return error_response_invalid_json_body()
         
         # Get and validate JSON fields:
-        name = json_request['name']
+        name = json_request.get('name')
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-
-        description = json_request['description']
+        description = json_request.get('description')
         if description is None:
             return error_response_expected_field('description')
         elif not isinstance(description, str):
@@ -528,12 +520,12 @@ def graph_detail(request, graph_id):
             return error_response_invalid_json_body()
         
         # Get JSON fields:
-        name = json_request['name']
+        name = json_request.get('name')
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-        description = json_request['description']
+        description = json_request.get('description')
         if description is None:
             return error_response_expected_field('description')
         elif not isinstance(description, str):
@@ -614,13 +606,84 @@ def graph_dataset_detail(request, graph_id, dataset_id):
             response_data = {
                 'label': dataset.label,
                 'plot_type': dataset.plot_type,
-                'label': dataset.label,
                 'is_axis': dataset.is_axis,
                 'source_name': dataset.source.name,
                 'source_id': dataset.source.id,
                 'column_id': dataset.column
             }
             return success_response(response_data, 200)
+    elif request.method == 'DELETE':
+        """
+        The `DELETE` method is used to delete a dataset from a graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('delete_graphdataset'):
+            return error_response_no_perms()
+        
+        # Delete the dataset:
+        dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
+        if dataset == None:
+            return error_response_graph_dataset_not_found(dataset_id)
+        else:
+            dataset.delete()
+            return success_response(f'Deleted dataset `${dataset_id}`.', 200)
+    elif request.method == 'PUT':
+        """
+        The `PUT` method is used to update a dataset.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('change_graphdataset'):
+            return error_response_no_perms()
+        
+        # Get JSON request body:
+        try:
+            json_request = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return error_response_invalid_json_body()
+        
+        # Get JSON fields:
+        label = json_request.get('label')
+        if label is None:
+            return error_response_expected_field('label')
+        elif not isinstance(label, str):
+            return error_response_invalid_field('label')
+        plot_type = json_request.get('plot_type')
+        if plot_type is None:
+            return error_response_expected_field('plot_type')
+        elif not isinstance(plot_type, str):
+            return error_response_invalid_field('plot_type')
+        is_axis = json_request.get('is_axis')
+        if is_axis is None:
+            return error_response_expected_field('is_axis')
+        elif not isinstance(is_axis, bool):
+            return error_response_invalid_field('is_axis')
+        source_id = json_request.get('source_id')
+        if source_id is None:
+            return error_response_expected_field('source_id')
+        elif not isinstance(source_id, int):
+            return error_response_invalid_field('source_id')
+        column_id = json_request.get('column_id')
+        if column_id is None:
+            return error_response_expected_field('column_id')
+        elif not isinstance(column_id, int):
+            return error_response_invalid_field('column_id')
+
+        # Get the dataset:
+        dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
+        if dataset == None:
+            return error_response_graph_dataset_not_found(dataset_id)
+        else:
+            dataset.label = label
+            dataset.plot_type = plot_type
+            dataset.is_axis = is_axis
+            dataset.source = Source.objects.get(id=source_id)
+            dataset.column = column_id
+            dataset.save()
+            return success_response(f'Updated dataset `{dataset_id}`.', 200)
+    else:
+        return error_response_http_method_unsupported(request.method)
 
 @login_required
 def graph_data(request):
