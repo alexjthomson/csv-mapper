@@ -532,6 +532,7 @@
                 console.error(jsonResponse.message);
                 $('#edit-graph-dataset-error').text(jsonResponse.message).show();
             } else {
+                await showAddGraphDatasetEditor(graphId)
                 $('#edit-graph-dataset-success').text('Successfully created dataset.').show();
             }
             await updateGraphDatasetTable(graphId);
@@ -599,6 +600,12 @@
                 console.error(jsonResponse.message);
                 $('#edit-graph-dataset-error').text(jsonResponse.message).show();
             } else {
+                {% if perms.api.add_graphdataset %}
+                await showAddGraphDatasetEditor()
+                {% else %}
+                clearGraphDatasetEditor();
+                await updateGraphDatasetEditor();
+                {% endif %}
                 $('#edit-graph-dataset-success').text('Successfully updated dataset.').show();
             }
             await updateGraphDatasetTable(graphId);
