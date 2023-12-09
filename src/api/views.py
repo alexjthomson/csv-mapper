@@ -538,7 +538,7 @@ def graph_detail(request, graph_id):
         graph = Graph.objects.get(id=graph_id)
         if graph is not None:
             graph.name = name.strip()
-            graph.description = name.strip()
+            graph.description = description.strip()
             graph.save()
             return success_response(None, 200, message=f'Updated graph `{graph_id}`.')
         else:
