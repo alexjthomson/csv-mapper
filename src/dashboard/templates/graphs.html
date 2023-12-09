@@ -222,7 +222,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p id="edit-graph-error" class="text-danger" style="display: none;"></p>
                 <form id="edit-graph-form">
                     <div class="mb-3">
                         <label for="edit-graph-name" class="form-label">Display Name</label>
@@ -235,6 +234,8 @@
                         <div id="edit-graph-description-help" class="form-text">A short description of the graph.</div>
                     </div>
                     <button id="edit-graph-submit-button" type="button" class="btn btn-primary rounded-pill" onclick="submitEditGraphForm()">Update Graph Info</button>
+                    <p id="edit-graph-error" class="text-danger mt-2" style="display: none;"></p>
+                    <p id="edit-graph-success" class="text-success mt-2" style="display: none;"></p>
                 </form>
                 <hr />
                 {% if perms.api.view_graph_dataset %}
@@ -254,7 +255,7 @@
                             </table>
                         </div>
                     </div>
-                    {% if perms.api.change_graph_dataset or perms.api.add_graph_dataset or perms.api.delete_graph_dataset %}
+                    {% if perms.api.change_graph_dataset or perms.api.add_graph_dataset %}
                     <div class="col">
                         <form id="edit-graph-datasets">
                             <div class="mb-3">
@@ -287,7 +288,13 @@
                                 </select>
                                 <div id="edit-graph-dataset-source-help-column" class="form-text">Column within the source that contains the database.</div>
                             </div>
-                            <button type="button" class="btn btn-primary rounded-pill" onclick="submitAddDatasetForm()">Add Dataset</button>
+                            {% if perms.api.change_graph_dataset %}
+                            <button type="button" class="btn btn-primary rounded-pill" onclick="submitAddGraphDatabaseForm">Add Dataset</button>
+                            {% else %}
+                            <button type="button" class="btn btn-primary rounded-pill" onclick="submitEditGraphDatabaseForm">Edit Dataset</button>
+                            {% endif %}
+                            <p id="edit-graph-dataset-error" class="text-danger mt-2" style="display: none;"></p>
+                            <p id="edit-graph-dataset-success" class="text-success mt-2" style="display: none;"></p>
                         </form>
                     </div>
                     {% endif %}
@@ -300,6 +307,9 @@
 <script>
     async function setEditModalInfo(graph_id) {
         $('#edit-graph-error').hide();
+        $('#edit-graph-success').hide();
+        $('#edit-graph-error-dataset').hide();
+        $('#edit-graph-success-dataset').hide();
         $('#edit-graph-name').val('');
         $('#edit-graph-description').val('');
         $('#edit-graph-submit-button').attr('onclick', `submitEditGraphForm(${graph_id})`);
@@ -342,11 +352,10 @@
             });
             const jsonResponse = await response.json();
             if (jsonResponse.result != 'success') {
-                $('#edit-graph-error').text(jsonResponse.message);
-                $('#edit-graph-error').show();
+                $('#edit-graph-error').text(jsonResponse.message).show();
             } else {
                 await updateGraphs();
-                $('#edit-graph-modal').modal('hide');
+                $('#edit-graph-success').text('Updated graph successfully.').show();
             }
         } catch (error) {
             console.error('Error submitting form: ', error);
