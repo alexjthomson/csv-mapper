@@ -117,7 +117,7 @@
                         <input id="create-source-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="create-source-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
                         <div id="create-source-has-header-help" class="form-text mt-0">Is the target CSV source expected to have a header?</div>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="submitCreateSourceForm()">Create Source</button>
+                    <button type="button" class="btn btn-primary rounded-pill" onclick="submitCreateSourceForm()">Create Source</button>
                 </form>
             </div>
         </div>
@@ -242,7 +242,7 @@
                         <div id="edit-source-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-ource-location" class="form-label">Location</label>
+                        <label for="edit-source-location" class="form-label">Location</label>
                         <input id="edit-source-location" name="location" type="url" class="form-control" aria-describedby="edit-source-location-help"/>
                         <div id="edit-source-location-help" class="form-text">Use a URL to the source. For example: file://example/csv/simple_data.csv</div>
                     </div>
@@ -251,7 +251,7 @@
                         <input id="edit-source-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="edit-source-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
                         <div id="edit-source-has-header-help" class="form-text mt-0">Is the target CSV source expected to have a header?</div>
                     </div>
-                    <button id="edit-source-submit-button" type="button" class="btn btn-primary" onclick="submitEditSourceForm()">Edit Source</button>
+                    <button id="edit-source-submit-button" type="button" class="btn btn-primary rounded-pill" onclick="submitEditSourceForm()">Edit Source</button>
                 </form>
                 <p id="edit-source-error" class="text-danger" style="display: none;"></p>
             </div>
@@ -329,8 +329,8 @@
                 <p>Are you sure that you want to delete <span id="delete-source-source-name" class="text-danger">this source</span>?</p>
                 <form id="delete-source-form">
                     <input id="delete-source-source-id" name="source_id" type="hidden"/>
-                    <button type="button" class="btn btn-danger" onclick="submitDeleteSourceForm()">Delete Source</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill" onclick="submitDeleteSourceForm()">Delete Source</button>
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
                 </form>
             </div>
         </div>

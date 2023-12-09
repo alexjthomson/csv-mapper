@@ -215,13 +215,14 @@
 {% endif %}
 {% if perms.api.change_graph %}
 <div id="edit-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="edit-graph-label" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 id="edit-graph-label" class="modal-title">Edit Graph</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <p id="edit-graph-error" class="text-danger" style="display: none;"></p>
                 <form id="edit-graph-form">
                     <div class="mb-3">
                         <label for="edit-graph-name" class="form-label">Display Name</label>
@@ -229,13 +230,69 @@
                         <div id="edit-graph-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-ource-description" class="form-label">Description</label>
+                        <label for="edit-graph-description" class="form-label">Description</label>
                         <textarea id="edit-graph-description" name="description" rows="3" class="form-control" aria-describedby="edit-graph-description-help"></textarea>
                         <div id="edit-graph-description-help" class="form-text">A short description of the graph.</div>
                     </div>
-                    <button id="edit-graph-submit-button" type="button" class="btn btn-primary" onclick="submitEditGraphForm()">Edit Graph</button>
+                    <button id="edit-graph-submit-button" type="button" class="btn btn-primary rounded-pill" onclick="submitEditGraphForm()">Update Graph Info</button>
                 </form>
-                <p id="edit-graph-error" class="text-danger" style="display: none;"></p>
+                <hr />
+                {% if perms.api.view_graph_dataset %}
+                <div class="row">
+                    <div class="col">
+                        <h5>Datasets</h5>
+                        <p>View{% if perms.api.change_graph_dataset or perms.api.add_graph_dataset or perms.api.delete_graph_dataset %} and manage{% endif %} graph datasets</p>
+                        <div class="table-responsive" style="max-height: 800px">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Dataset</th>
+                                        <th scope="col" class="fit">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% if perms.api.change_graph_dataset or perms.api.add_graph_dataset or perms.api.delete_graph_dataset %}
+                    <div class="col">
+                        <form id="edit-graph-datasets">
+                            <div class="mb-3">
+                                <label for="edit-graph-dataset-label">Dataset Label</label>
+                                <input id="edit-graph-dataset-label" name="name" type="text" class="form-control" aria-describedby="edit-graph-dataset-label-help"/>
+                                <div id="edit-graph-dataset-label-help" class="form-text">Display name for the dataset.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-graph-dataset-plot" class="form-label">Dataset Plot</label>
+                                <select id="edit-graph-dataset-plot" name="plot_type" class="form-select" aria-describedby="edit-graph-dataset-plot-help">
+                                    <option>Line</option>
+                                    <option>Bar</option>
+                                </select>
+                                <div id="edit-graph-dataset-plot-help" class="form-text">Type of plot to use for the dataset.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-graph-dataset-is-axis" class="form-label mb-0">Axis Dataset</label>
+                                <input id="edit-graph-dataset-is-axis" name="has_header" type="checkbox" class="form-check-input" aria-describedby="edit-graph-dataset-is-axis" style="margin-left: 6px; margin-top: 5px;"/>
+                                <div id="edit-graph-dataset-is-axis-help" class="form-text mt-0">Does this dataset contain axis labels? Only one dataset for a graph should be used as an axis dataset.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-graph-dataset-source" class="form-label">Dataset Source</label>
+                                <select id="edit-graph-dataset-source" name="plot_type" class="form-select" aria-describedby="edit-graph-dataset-source-help">
+                                </select>
+                                <div id="edit-graph-dataset-source-help" class="form-text">Source that contains the dataset.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-graph-dataset-source-column" class="form-label">Source Column</label>
+                                <select id="edit-graph-dataset-source-column" name="plot_type" class="form-select" aria-describedby="edit-graph-dataset-source-column-help">
+                                </select>
+                                <div id="edit-graph-dataset-source-help-column" class="form-text">Column within the source that contains the database.</div>
+                            </div>
+                            <button type="button" class="btn btn-primary rounded-pill" onclick="submitAddDatasetForm()">Add Dataset</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
