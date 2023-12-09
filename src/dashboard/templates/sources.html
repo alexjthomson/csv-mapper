@@ -4,9 +4,9 @@
     <div class="row">
         <div class="col">
             <h1>Sources</h1>
-            <p class="mb-0">View{% if perms.api.change_sourcemodel or perms.api.add_sourcemodel or perms.api.delete_sourcemodel %} and manage{% endif %} CSV sources. These are used to supply data to graphs.</p>
+            <p class="mb-0">View{% if perms.api.change_source or perms.api.add_source or perms.api.delete_source %} and manage{% endif %} CSV sources. These are used to supply data to graphs.</p>
         </div>
-        {% if perms.api.add_sourcemodel %}
+        {% if perms.api.add_source %}
         <div class="col d-flex align-items-center justify-content-end">
             <button type="button" class="btn btn-primary rounded-pill shadow fw-bold" data-bs-toggle="modal" data-bs-target="#create-source-modal">Create Source</button>
         </div>
@@ -50,7 +50,7 @@
                                 $('<td>').addClass('fit').append(
                                     $('<div>')
                                         .addClass('table-action-buttons')
-                                        {% if perms.api.view_sourcemodel %}
+                                        {% if perms.api.view_source %}
                                         .append(
                                             $('<button>')
                                                 .addClass('btn btn-primary rounded-pill fw-bold')
@@ -60,7 +60,7 @@
                                                 .text('Inspect')
                                         )
                                         {% endif %}
-                                        {% if perms.api.change_sourcemodel %}
+                                        {% if perms.api.change_source %}
                                         .append(
                                             $('<button>')
                                                 .addClass('btn btn-primary rounded-pill fw-bold')
@@ -70,7 +70,7 @@
                                                 .text('Edit')
                                                 )
                                                 {% endif %}
-                                                {% if perms.api.delete_sourcemodel %}
+                                                {% if perms.api.delete_source %}
                                                 .append(
                                             $('<button>')
                                                 .addClass('btn btn-danger rounded-pill fw-bold')
@@ -90,7 +90,7 @@
             }
             updateSources();
         </script>
-        {% if perms.api.add_sourcemodel %}
+        {% if perms.api.add_source %}
         <div id="create-source-modal" class="modal fade" tabindex="-1" aria-labelledby="create-source-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -154,7 +154,7 @@
             }
         </script>
         {% endif %}
-        {% if perms.api.view_sourcemodel %}
+        {% if perms.api.view_source %}
         <div id="inspect-source-modal" class="modal fade" tabindex="-1" aria-labelledby="inspect-source-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content">
@@ -228,7 +228,7 @@
             }
         </script>
         {% endif %}
-        {% if perms.api.change_sourcemodel %}
+        {% if perms.api.change_source %}
         <div id="edit-source-modal" class="modal fade" tabindex="-1" aria-labelledby="edit-source-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -319,7 +319,7 @@
             }
         </script>
         {% endif %}
-        {% if perms.api.delete_sourcemodel %}
+        {% if perms.api.delete_source %}
         <div id="delete-source-modal" class="modal fade" tabindex="-1" aria-labelledby="delete-source-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">

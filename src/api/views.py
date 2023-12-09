@@ -107,7 +107,7 @@ def source_list(request):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.view_sourcemodel'):
+        if not request.user.has_perm('api.view_source'):
             return error_response_no_perms()
 
         # Get the sources:
@@ -138,7 +138,7 @@ def source_list(request):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.add_sourcemodel'):
+        if not request.user.has_perm('api.add_source'):
             return error_response_no_perms()
         
         # Get JSON request body:
@@ -202,7 +202,7 @@ def source_detail(request, source_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.view_sourcemodel'):
+        if not request.user.has_perm('api.view_source'):
             return error_response_no_perms()
 
         source = Source.objects.get(id=source_id)
@@ -222,7 +222,7 @@ def source_detail(request, source_id):
         """
         
         # Check permissions:
-        if not request.user.has_perm('api.delete_sourcemodel'):
+        if not request.user.has_perm('api.delete_source'):
             return error_response_no_perms()
         
         # Get the source:
@@ -246,7 +246,7 @@ def source_detail(request, source_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('api.change_sourcemodel'):
+        if not request.user.has_perm('api.change_source'):
             return error_response_no_perms()
         
         # Get JSON request body:
@@ -295,7 +295,7 @@ def source_data(request, source_id):
     """
     if request.method == 'GET':
         # Check permissions:
-        if not request.user.has_perm('api.view_sourcemodel'):
+        if not request.user.has_perm('api.view_source'):
             return error_response_no_perms()
 
         # Get the source:
@@ -398,6 +398,14 @@ def graph_list(request):
     - POST: Creates a new graph.
     """
     if request.method == 'GET':
+        """
+        The `GET` method retrieves a list of every graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('api.view_graph'):
+            return error_response_no_perms()
+        
         response_data = {
             'result': 'error',
             'message': 'Not implemented.'
