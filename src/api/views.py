@@ -503,7 +503,7 @@ def graph_detail(request, graph_id):
         graph = Graph.objects.get(id=graph_id)
         if graph is not None:
             # The graph exists, delete the graph:
-            source.delete()
+            graph.delete()
             return success_response(f'Deleted graph `{graph_id}`.', 200)
         else:
             return error_response_graph_not_found(graph_id)
