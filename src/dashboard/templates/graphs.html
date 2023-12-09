@@ -4,371 +4,351 @@
     <div class="row">
         <div class="col">
             <h1>Graphs</h1>
-            <p class="mb-0">View{% if perms.api.change_graphmodel or perms.api.add_graphmodel or perms.api.delete_graphmodel %} and manage{% endif %} graphs.</p>
+            <p class="mb-0">View{% if perms.api.change_graph or perms.api.add_graph or perms.api.delete_graph %} and manage{% endif %} graphs.</p>
         </div>
-        {% if perms.api.add_graphmodel %}
+        {% if perms.api.add_graph %}
         <div class="col d-flex align-items-center justify-content-end">
             <button type="button" class="btn btn-primary rounded-pill shadow fw-bold" data-bs-toggle="modal" data-bs-target="#create-graph-modal">Create Graph</button>
         </div>
         {% endif %}
-        <div class="table-responsive shadow-sm rounded mt-5 mb-5">
-            <table class="table mb-0">
-                <thead>
-                    <tr>
-                        <th scope="col">Display Name</th>
-                        <th scope="col">Source ID</th>
-                        <th scope="col">Source Display Name</th>
-                        <th scope="col" class="fit">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="graph-table"></tbody>
-            </table>
-            {% csrf_token %}
-            <script>
-                async function updateSources() {
-                    try {
-                        const response = await fetch('/api/graph');
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
-                        const data = await response.json();
-                        const tableBody = $('#graph-table');
-                        tableBody.empty();
-                        $.each(data.data, function(index, entry) {
-                            tableBody.append(
-                                $('<tr>').append(
-                                    $('<td>').text(entry.name),
-                                    $('<td>').text(entry.location),
-                                    $('<td>').append(
-                                        $('<input>')
-                                            .attr('type', 'checkbox')
-                                            .attr('onclick', 'return false;')
-                                            .prop('checked', entry.has_header)
-                                    ),
-                                    $('<td>').addClass('fit').append(
-                                        $('<div>')
-                                            .addClass('table-action-buttons')
-                                            {% if perms.api.view_graphmodel %}
-                                            .append(
-                                                $('<button>')
-                                                    .addClass('btn btn-primary rounded-pill fw-bold')
-                                                    .attr('data-bs-toggle', 'modal')
-                                                    .attr('data-bs-target', '#inspect-graph-modal')
-                                                    .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}", "${entry.location}")`)
-                                                    .text('Inspect')
-                                            )
-                                            {% endif %}
-                                            {% if perms.api.change_graphmodel %}
-                                            .append(
-                                                $('<button>')
-                                                    .addClass('btn btn-primary rounded-pill fw-bold')
-                                                    .attr('data-bs-toggle', 'modal')
-                                                    .attr('data-bs-target', '#edit-graph-modal')
-                                                    .attr('onclick', `setEditModalInfo(${entry.id})`)
-                                                    .text('Edit')
-                                                    )
-                                                    {% endif %}
-                                                    {% if perms.api.delete_graphmodel %}
-                                                    .append(
-                                                $('<button>')
-                                                    .addClass('btn btn-danger rounded-pill fw-bold')
-                                                    .attr('data-bs-toggle', 'modal')
-                                                    .attr('data-bs-target', '#delete-graph-modal')
-                                                    .attr('onclick', `setDeleteModalInfo(${entry.id}, "${entry.name}")`)
-                                                    .text('Delete')
-                                            )
-                                            {% endif %}
-                                    )
+    </div>
+    <div class="table-responsive shadow-sm rounded mt-5 mb-5">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Display Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col" class="fit">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="graph-table"></tbody>
+        </table>
+        {% csrf_token %}
+    </div>
+</div>
+<script>
+    async function updateGraphs() {
+        try {
+            const response = await fetch('/api/graph');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            const tableBody = $('#graph-table');
+            tableBody.empty();
+            $.each(data.data, function(index, entry) {
+                tableBody.append(
+                    $('<tr>').append(
+                        $('<td>').text(entry.name),
+                        $('<td>').text(entry.description),
+                        $('<td>').addClass('fit').append(
+                            $('<div>')
+                                .addClass('table-action-buttons')
+                                {% if perms.api.view_graph %}
+                                .append(
+                                    $('<button>')
+                                        .addClass('btn btn-primary rounded-pill fw-bold')
+                                        .attr('data-bs-toggle', 'modal')
+                                        .attr('data-bs-target', '#inspect-graph-modal')
+                                        .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}", "${entry.location}")`)
+                                        .text('Inspect')
                                 )
-                            );
-                        });
-                    } catch (error) {
-                        console.error('Error fetching data: ', error);
-                    }
-                }
-                updateSources();
-            </script>
-            {% if perms.api.add_graphmodel %}
-            <div id="create-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="create-graph-label" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 id="create-graph-label" class="modal-title">Create Source</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="create-graph-form">
-                                <div class="mb-3">
-                                    <label for="create-graph-name" class="form-label">Display Name</label>
-                                    <input id="create-graph-name" name="name" type="text" class="form-control" aria-describedby="create-graph-name-help"/>
-                                    <div id="create-graph-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="create-ource-location" class="form-label">Location</label>
-                                    <input id="create-graph-location" name="location" type="url" class="form-control" aria-describedby="create-graph-location-help"/>
-                                    <div id="create-graph-location-help" class="form-text">Use a URL to the graph. For example: file:///data/example/csv/simple_data.csv</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="create-graph-has-header" class="form-label mb-0">Has Header</label>
-                                    <input id="create-graph-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="create-graph-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
-                                    <div id="create-graph-has-header-help" class="form-text mt-0">Is the target CSV graph expected to have a header?</div>
-                                </div>
-                                <button type="button" class="btn btn-primary" onclick="submitCreateSourceForm()">Create Source</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                                {% endif %}
+                                {% if perms.api.change_graph %}
+                                .append(
+                                    $('<button>')
+                                        .addClass('btn btn-primary rounded-pill fw-bold')
+                                        .attr('data-bs-toggle', 'modal')
+                                        .attr('data-bs-target', '#edit-graph-modal')
+                                        .attr('onclick', `setEditModalInfo(${entry.id})`)
+                                        .text('Edit')
+                                        )
+                                        {% endif %}
+                                        {% if perms.api.delete_graph %}
+                                        .append(
+                                    $('<button>')
+                                        .addClass('btn btn-danger rounded-pill fw-bold')
+                                        .attr('data-bs-toggle', 'modal')
+                                        .attr('data-bs-target', '#delete-graph-modal')
+                                        .attr('onclick', `setDeleteModalInfo(${entry.id}, "${entry.name}")`)
+                                        .text('Delete')
+                                )
+                                {% endif %}
+                        )
+                    )
+                );
+            });
+        } catch (error) {
+            console.error('Error fetching data: ', error);
+        }
+    }
+    updateGraphs();
+</script>
+{% if perms.api.add_graph %}
+<div id="create-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="create-graph-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="create-graph-label" class="modal-title">Create Graph</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <script>
-                async function submitCreateSourceForm() {
-                    const formData = $('#create-graph-form').serializeArray();
-                    formDataJson = {};
-                    $.each(formData, function(index, field) {
-                        formDataJson[field.name] = field.value;
-                    });
-                    formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-                    try {
-                        const response = await fetch('/api/graph/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                            },
-                            body: JSON.stringify(formDataJson)
-                        });
-        
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
-        
-                        const responseData = await response.json();
-        
-                        await updateSources();
-        
-                        $('#create-graph-modal').modal('hide');
-                    } catch (error) {
-                        console.error('Error submitting form: ', error);
-                    }
-                }
-            </script>
-            {% endif %}
-            {% if perms.api.view_graphmodel %}
-            <div id="inspect-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="inspect-graph-label" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 id="inspect-graph-label" class="modal-title fw-bold"></h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="table-responsive rounded">
-                                <table class="table">
-                                    <thead id="inspect-graph-thead">
-                                    </thead>
-                                    <tbody id="inspect-graph-tbody">
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p id="inspect-graph-error" class="text-danger" style="display: none;"></p>
-                            <p id="inspect-graph-location" class="text-secondary"></p>
-                        </div>
+            <div class="modal-body">
+                <form id="create-graph-form">
+                    <div class="mb-3">
+                        <label for="create-graph-name" class="form-label">Display Name</label>
+                        <input id="create-graph-name" name="name" type="text" class="form-control" aria-describedby="create-graph-name-help"/>
+                        <div id="create-graph-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
                     </div>
-                </div>
-            </div>
-            <script>
-                async function setInspectModalInfo(id, name, location, has_header) {
-                    $('#inspect-graph-error').hide();
-                    $('#inspect-graph-graph-id').val(id);
-                    $('#inspect-graph-label').text(name);
-                    $('#inspect-graph-location').text(location);
-                    const tableHead = $('#inspect-graph-thead')
-                    tableHead.empty();
-                    const tableBody = $('#inspect-graph-tbody');
-                    tableBody.empty();
-                    const response = await fetch(`/api/graph/${id}/data/`);
-                    const jsonResponse = await response.json();
-                    if (jsonResponse.result != 'success') {
-                        console.error(jsonResponse.message);
-                        $('#inspect-graph-error').text(jsonResponse.message).show();
-                    } else {
-                        const columns = jsonResponse.data;
-                        const tableHeadRow = $('<tr>');
-                        var rowCount = -1;
-                        const columnCount = columns.length;
-                        const tableRows = [];
-                        $.each(columns, function(index, column) {
-                            if (column.unit != null) {
-                                tableHeadRow.append(
-                                    $('<th>').append(
-                                        $('<span>').text(column.name)
-                                    ).append(
-                                        $('<span>').addClass("text-secondary").text(` (${column.unit})`)
-                                    )
-                                );
-                            } else {
-                                tableHeadRow.append(
-                                    $('<th>').text(column.name)
-                                );
-                            }
-                            if (rowCount == -1) {
-                                rowCount = column.data.length;
-                            }
-                        });
-                        tableHead.append(tableHeadRow);
-                        for (let i = 0; i < rowCount; i++) {
-                            var row = $('<tr>');
-                            for (let j = 0; j < columnCount; j++) {
-                                row.append($('<td>').text(columns[j].data[i]));
-                            }
-                            tableBody.append(row);
-                        }
-                    }
-                }
-            </script>
-            {% endif %}
-            {% if perms.api.change_graphmodel %}
-            <div id="edit-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="edit-graph-label" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 id="edit-graph-label" class="modal-title">Edit Source</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="edit-graph-form">
-                                <div class="mb-3">
-                                    <label for="edit-graph-name" class="form-label">Display Name</label>
-                                    <input id="edit-graph-name" name="name" type="text" class="form-control" aria-describedby="edit-graph-name-help"/>
-                                    <div id="edit-graph-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="edit-ource-location" class="form-label">Location</label>
-                                    <input id="edit-graph-location" name="location" type="url" class="form-control" aria-describedby="edit-graph-location-help"/>
-                                    <div id="edit-graph-location-help" class="form-text">Use a URL to the graph. For example: file://example/csv/simple_data.csv</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="edit-graph-has-header" class="form-label mb-0">Has Header</label>
-                                    <input id="edit-graph-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="edit-graph-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
-                                    <div id="edit-graph-has-header-help" class="form-text mt-0">Is the target CSV graph expected to have a header?</div>
-                                </div>
-                                <button id="edit-graph-submit-button" type="button" class="btn btn-primary" onclick="submitEditSourceForm()">Edit Source</button>
-                            </form>
-                            <p id="edit-graph-error" class="text-danger" style="display: none;"></p>
-                        </div>
+                    <div class="mb-3">
+                        <label for="create-ource-description" class="form-label">Description</label>
+                        <textarea id="create-graph-description" name="description" rows="3" class="form-control" aria-describedby="create-graph-description-help"></textarea>
+                        <div id="create-graph-description-help" class="form-text">A short description of the graph.</div>
                     </div>
-                </div>
+                    <button type="button" class="btn btn-primary" onclick="submitCreateGraphForm()">Create Graph</button>
+                </form>
             </div>
-            <script>
-                async function setEditModalInfo(graph_id) {
-                    $('#edit-graph-error').hide();
-                    $('#edit-graph-name').val('');
-                    $('#edit-graph-location').val('');
-                    $('#edit-graph-has_header').prop('checked', false);
-                    $('#edit-graph-submit-button').attr('onclick', `submitEditSourceForm(${graph_id})`);
-                    try {
-                        const response = await fetch(`/api/graph/${graph_id}/`, {
-                            method: 'GET',
-                            headers: {
-                                'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                            }
-                        });
-                        const jsonResponse = await response.json();
-                        if (jsonResponse.result != 'success') {
-                            $('#edit-graph-error').text(jsonResponse.message);
-                            $('#edit-graph-error').show();
-                        } else {
-                            const graph = jsonResponse.data;
-                            $('#edit-graph-name').val(graph.name);
-                            $('#edit-graph-location').val(graph.location);
-                            $('#edit-graph-has-header').prop('checked', graph.has_header);
-                        }
-                    } catch (error) {
-                        console.error('Error fetching graph data: ', error)
-                    }
-                }
-                async function submitEditSourceForm(graph_id) {
-                    $('#edit-graph-error').hide();
-                    const formData = $('#edit-graph-form').serializeArray();
-                    formDataJson = {};
-                    $.each(formData, function(index, field) {
-                        formDataJson[field.name] = field.value;
-                    });
-                    formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-                    try {
-                        const response = await fetch(`/api/graph/${graph_id}/`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                            },
-                            body: JSON.stringify(formDataJson)
-                        });
-                        const jsonResponse = await response.json();
-                        if (jsonResponse.result != 'success') {
-                            $('#edit-graph-error').text(jsonResponse.message);
-                            $('#edit-graph-error').show();
-                        } else {
-                            await updateSources();
-                            $('#edit-graph-modal').modal('hide');
-                        }
-                    } catch (error) {
-                        console.error('Error submitting form: ', error);
-                    }
-                }
-            </script>
-            {% endif %}
-            {% if perms.api.delete_graphmodel %}
-            <div id="delete-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="delete-graph-label" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 id="delete-graph-label" class="modal-title fw-bold">Delete Source</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Are you sure that you want to delete <span id="delete-graph-graph-name" class="text-danger">this graph</span>?</p>
-                            <form id="delete-graph-form">
-                                <input id="delete-graph-graph-id" name="graph_id" type="hidden"/>
-                                <button type="button" class="btn btn-danger" onclick="submitDeleteSourceForm()">Delete Source</button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <script>
-                function setDeleteModalInfo(id, name) {
-                    $('#delete-graph-graph-id').val(id);
-                    $('#delete-graph-graph-name').text(name);
-                }
-                async function submitDeleteSourceForm() {
-                    const formData = $('#delete-graph-form').serializeArray();
-                    const graphId = formData[0].value;
-                    try {
-                        const response = await fetch(`/api/graph/${graphId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                            },
-                        });
-        
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
-        
-                        const responseData = await response.json();
-        
-                        await updateSources();
-        
-                        $('#delete-graph-modal').modal('hide');
-                    } catch (error) {
-                        console.error('Error submitting form: ', error);
-                    }
-                }
-            </script>
-            {% endif %}
         </div>
     </div>
 </div>
+<script>
+    async function submitCreateGraphForm() {
+        const formData = $('#create-graph-form').serializeArray();
+        formDataJson = {};
+        $.each(formData, function(index, field) {
+            formDataJson[field.name] = field.value;
+        });
+        formDataJson['has_header'] = formDataJson['has_header'] == 'on'
+        try {
+            const response = await fetch('/api/graph/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                },
+                body: JSON.stringify(formDataJson)
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const responseData = await response.json();
+            await updateGraphs();
+            $('#create-graph-modal').modal('hide');
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+        }
+    }
+</script>
+{% endif %}
+{% if perms.api.view_graph %}
+<div id="inspect-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="inspect-graph-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 id="inspect-graph-label" class="modal-title fw-bold"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive rounded">
+                    <table class="table">
+                        <thead id="inspect-graph-thead">
+                        </thead>
+                        <tbody id="inspect-graph-tbody">
+                        </tbody>
+                    </table>
+                </div>
+                <p id="inspect-graph-error" class="text-danger" style="display: none;"></p>
+                <p id="inspect-graph-location" class="text-secondary"></p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function setInspectModalInfo(id, name, location, has_header) {
+        $('#inspect-graph-error').hide();
+        $('#inspect-graph-graph-id').val(id);
+        $('#inspect-graph-label').text(name);
+        $('#inspect-graph-location').text(location);
+        const tableHead = $('#inspect-graph-thead')
+        tableHead.empty();
+        const tableBody = $('#inspect-graph-tbody');
+        tableBody.empty();
+        const response = await fetch(`/api/graph/${id}/data/`);
+        const jsonResponse = await response.json();
+        if (jsonResponse.result != 'success') {
+            console.error(jsonResponse.message);
+            $('#inspect-graph-error').text(jsonResponse.message).show();
+        } else {
+            const columns = jsonResponse.data;
+            const tableHeadRow = $('<tr>');
+            var rowCount = -1;
+            const columnCount = columns.length;
+            const tableRows = [];
+            $.each(columns, function(index, column) {
+                if (column.unit != null) {
+                    tableHeadRow.append(
+                        $('<th>').append(
+                            $('<span>').text(column.name)
+                        ).append(
+                            $('<span>').addClass("text-secondary").text(` (${column.unit})`)
+                        )
+                    );
+                } else {
+                    tableHeadRow.append(
+                        $('<th>').text(column.name)
+                    );
+                }
+                if (rowCount == -1) {
+                    rowCount = column.data.length;
+                }
+            });
+            tableHead.append(tableHeadRow);
+            for (let i = 0; i < rowCount; i++) {
+                var row = $('<tr>');
+                for (let j = 0; j < columnCount; j++) {
+                    row.append($('<td>').text(columns[j].data[i]));
+                }
+                tableBody.append(row);
+            }
+        }
+    }
+</script>
+{% endif %}
+{% if perms.api.change_graph %}
+<div id="edit-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="edit-graph-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="edit-graph-label" class="modal-title">Edit Graph</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-graph-form">
+                    <div class="mb-3">
+                        <label for="edit-graph-name" class="form-label">Display Name</label>
+                        <input id="edit-graph-name" name="name" type="text" class="form-control" aria-describedby="edit-graph-name-help"/>
+                        <div id="edit-graph-name-help" class="form-text">Use an easy-to-read, memorable, and descriptive name.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-ource-location" class="form-label">Location</label>
+                        <input id="edit-graph-location" name="location" type="url" class="form-control" aria-describedby="edit-graph-location-help"/>
+                        <div id="edit-graph-location-help" class="form-text">Use a URL to the graph. For example: file://example/csv/simple_data.csv</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-graph-has-header" class="form-label mb-0">Has Header</label>
+                        <input id="edit-graph-has-header" name="has_header" type="checkbox" class="form-check-input" aria-describedby="edit-graph-has-header-help" style="margin-left: 6px; margin-top: 5px;"/>
+                        <div id="edit-graph-has-header-help" class="form-text mt-0">Is the target CSV graph expected to have a header?</div>
+                    </div>
+                    <button id="edit-graph-submit-button" type="button" class="btn btn-primary" onclick="submitEditGraphForm()">Edit Graph</button>
+                </form>
+                <p id="edit-graph-error" class="text-danger" style="display: none;"></p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function setEditModalInfo(graph_id) {
+        $('#edit-graph-error').hide();
+        $('#edit-graph-name').val('');
+        $('#edit-graph-location').val('');
+        $('#edit-graph-has_header').prop('checked', false);
+        $('#edit-graph-submit-button').attr('onclick', `submitEditGraphForm(${graph_id})`);
+        try {
+            const response = await fetch(`/api/graph/${graph_id}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                }
+            });
+            const jsonResponse = await response.json();
+            if (jsonResponse.result != 'success') {
+                $('#edit-graph-error').text(jsonResponse.message);
+                $('#edit-graph-error').show();
+            } else {
+                const graph = jsonResponse.data;
+                $('#edit-graph-name').val(graph.name);
+                $('#edit-graph-location').val(graph.location);
+                $('#edit-graph-has-header').prop('checked', graph.has_header);
+            }
+        } catch (error) {
+            console.error('Error fetching graph data: ', error)
+        }
+    }
+    async function submitEditGraphForm(graph_id) {
+        $('#edit-graph-error').hide();
+        const formData = $('#edit-graph-form').serializeArray();
+        formDataJson = {};
+        $.each(formData, function(index, field) {
+            formDataJson[field.name] = field.value;
+        });
+        formDataJson['has_header'] = formDataJson['has_header'] == 'on'
+        try {
+            const response = await fetch(`/api/graph/${graph_id}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                },
+                body: JSON.stringify(formDataJson)
+            });
+            const jsonResponse = await response.json();
+            if (jsonResponse.result != 'success') {
+                $('#edit-graph-error').text(jsonResponse.message);
+                $('#edit-graph-error').show();
+            } else {
+                await updateGraphs();
+                $('#edit-graph-modal').modal('hide');
+            }
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+        }
+    }
+</script>
+{% endif %}
+{% if perms.api.delete_graph %}
+<div id="delete-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="delete-graph-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 id="delete-graph-label" class="modal-title fw-bold">Delete Graph</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure that you want to delete <span id="delete-graph-graph-name" class="text-danger">this graph</span>?</p>
+                <form id="delete-graph-form">
+                    <input id="delete-graph-graph-id" name="graph_id" type="hidden"/>
+                    <button type="button" class="btn btn-danger" onclick="submitDeleteGraphForm()">Delete Graph</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function setDeleteModalInfo(id, name) {
+        $('#delete-graph-graph-id').val(id);
+        $('#delete-graph-graph-name').text(name);
+    }
+    async function submitDeleteGraphForm() {
+        const formData = $('#delete-graph-form').serializeArray();
+        const graphId = formData[0].value;
+        try {
+            const response = await fetch(`/api/graph/${graphId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const responseData = await response.json();
+            await updateGraphs();
+            $('#delete-graph-modal').modal('hide');
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}

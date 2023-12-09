@@ -89,6 +89,13 @@ def error_response_source_not_found(source_id):
     """
     return error_response(f'Source `{source_id}` does not exist.', 404)
 
+def error_response_graph_not_found(graph_id):
+    """
+    Constructs an error response that indicates that the specified graph does
+    not exist.
+    """
+    return error_response(f'Graph `{graph_id}` does not exist.', 404)
+
 @login_required
 def source_list(request):
     """
@@ -167,7 +174,7 @@ def source_list(request):
 
         # Create the source:
         try:
-            source_instance = Source(name=name, location=location, has_header=has_header)
+            source_instance = Source(name=name.strip(), location=location.strip(), has_header=has_header)
             source_instance.save()
         except ValidationError:
             return error_response('Failed to validate source data.', 400)
@@ -183,9 +190,6 @@ def source_list(request):
 def source_detail(request, source_id):
     """
     RESTful API endpoint for interacting with a single source.
-
-    This endpoint will perform different actions depending on the HTTP request
-    method used to access the endpoint.
     """
 
     if request.method == 'GET':
@@ -275,8 +279,8 @@ def source_detail(request, source_id):
         source = Source.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now modify it:
-            source.name = name
-            source.location = location
+            source.name = name.strip()
+            source.location = location.strip()
             source.has_header = has_header
             source.save()
             return success_response(None, 200, message=f'Updated source `{source_id}`.')
@@ -412,9 +416,9 @@ def graph_list(request):
         # Add each graph to the graph JSON data:
         for graph in graphs:
             graph_json.append({
-                'id': source.id,
-                'name': source.name,
-                'description': source.description,
+                'id': graph.id,
+                'name': graph.name,
+                'description': graph.description,
             })
         
         # Return the graph JSON data:
@@ -449,7 +453,7 @@ def graph_list(request):
         
         # Create the graph:
         try:
-            graph_instance = Graph(name=name, description=description)
+            graph_instance = Graph(name=name.strip(), description=description.strip())
             graph_instance.save()
         except ValidationError:
             return error_response('Failed to validate graph data.', 400)
@@ -466,17 +470,90 @@ def graph_list(request):
         return JsonResponse(response_data, status=405)
 
 @login_required
-def graph_detail(request):
-    # TODO
+def graph_detail(request, graph_id):
+    """
+    RESTful API endpoint for interacting with a single graph.
+    """
+
     if request.method == 'GET':
-        response_data = {
-            'result': 'error',
-            'message': 'Not implemented.'
-        }
-        return JsonResponse(response_data, status=500)
+        """
+        The `GET` method will fetch data for a single graph.
+        """
+        
+        # Check permissions:
+        if not request.user.has_perm('api.view_graph'):
+            return error_response_no_perms()
+        
+        # Get and return the graph:
+        graph = Graph.objects.get(id=graph_id)
+        if graph is not None:
+            return success_response({ 'name': graph.name, 'description': graph.description }, 200)
+        else:
+            return error_response_graph_not_found(graph_id)
+    elif request.method == 'DELETE':
+        """
+        The `DELETE` method will delete a single graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('api.delete_graph'):
+            return error_response_no_perms()
+        
+        # Get the graph:
+        graph = Graph.objects.get(id=graph_id)
+        if graph is not None:
+            # The graph exists, delete the graph:
+            source.delete()
+            return success_response(f'Deleted graph `{graph_id}`.', 200)
+        else:
+            return error_response_graph_not_found(graph_id)
+    elif request.method == 'PUT':
+        """
+        The `PUT` method updates an entire graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('api.change_graph'):
+            return error_response_no_perms()
+        
+        # Get JSON request body:
+        try:
+            json_request = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return error_response_invalid_json_body()
+        
+        # Get JSON fields:
+        name = json_request['name']
+        if name is None:
+            return error_response_expected_field('name')
+        elif not isinstance(name, str):
+            return error_response_invalid_field('name')
+        description = json_request['description']
+        if description is None:
+            return error_response_expected_field('description')
+        elif not isinstance(description, str):
+            return error_response_invalid_field('description')
+        
+        # Get the graph that needs editing:
+        graph = Graph.objects.get(id=graph_id)
+        if graph is not None:
+            graph.name = name.strip()
+            graph.description = name.strip()
+            graph.save()
+            return success_response(None, 200, message=f'Updated graph `{graph_id}`.')
+        else:
+            return error_response_graph_not_found()
     else:
-        response_data = {
-            'result': 'error',
-            'message': f'Unknown HTTP method: `{request.method}`.'
-        }
-        return JsonResponse(response_data, status=405)
+        return error_response_http_method_unsupported(request.method)
+
+@login_required
+def graph_dataset_list(request, graph_id):
+    return error_response_http_method_unsupported(request.method)
+
+@login_required
+def graph_dataset_detail(request, graph_id, dataset_id):
+    return error_response_http_method_unsupported(request.method)
+
+@login_required
+def graph_data(request):
+    return error_response_http_method_unsupported(request.method)
