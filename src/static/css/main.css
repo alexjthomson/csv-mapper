@@ -142,3 +142,6 @@ body {
     white-space: nowrap;
     width: 1%;
 }
+.min-width-column {
+    min-width: 150px;
+}
