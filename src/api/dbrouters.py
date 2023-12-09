@@ -1,4 +1,4 @@
-from .models import SourceModel, GraphModel, SourceColumnConfigModel
+from .models import Source, Graph, SourceColumnConfig
 
 class ApiRouter(object):
     """

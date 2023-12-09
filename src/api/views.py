@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import GraphModel, SourceModel, SourceColumnConfigModel
+from .models import Source, SourceColumnConfig, Graph, GraphDataset
 import csv
 import json
 import asyncio
@@ -93,6 +93,13 @@ def error_response_source_not_found(source_id):
 def source_list(request):
     """
     RESTful API endpoint for interacting with many sources.
+
+    The main use of this endpoint is to either get a list of each of the
+    sources, or to create a new source.
+
+    Supported HTTP methods:
+    - GET: Gets a list of every source.
+    - POST: Creates a new source.
     """
     if request.method == 'GET':
         """
@@ -104,7 +111,7 @@ def source_list(request):
             return error_response_no_perms()
 
         # Get the sources:
-        sources = SourceModel.objects.all()
+        sources = Source.objects.all()
 
         # Create a JSON array to write each source into:
         sources_json = []
@@ -163,7 +170,7 @@ def source_list(request):
 
         # Create the source:
         try:
-            source_instance = SourceModel(name=name, location=location, has_header=has_header)
+            source_instance = Source(name=name, location=location, has_header=has_header)
             source_instance.save()
         except ValidationError:
             return error_response('Failed to validate source data.', 400)
@@ -198,7 +205,7 @@ def source_detail(request, source_id):
         if not request.user.has_perm('api.view_sourcemodel'):
             return error_response_no_perms()
 
-        source = SourceModel.objects.get(id=source_id)
+        source = Source.objects.get(id=source_id)
         if source is not None:
             return success_response({ 'name': source.name, 'location': source.location, 'has_header': source.has_header }, 200)
         else:
@@ -219,7 +226,7 @@ def source_detail(request, source_id):
             return error_response_no_perms()
         
         # Get the source:
-        source = SourceModel.objects.get(id=source_id)
+        source = Source.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now delete it:
             source.delete()
@@ -268,7 +275,7 @@ def source_detail(request, source_id):
             return error_response_invalid_field('has_header')
 
         # Get the source:
-        source = SourceModel.objects.get(id=source_id)
+        source = Source.objects.get(id=source_id)
         if source is not None:
             # The source exists, we can now modify it:
             source.name = name
@@ -292,7 +299,7 @@ def source_data(request, source_id):
             return error_response_no_perms()
 
         # Get the source:
-        source = SourceModel.objects.get(id=source_id)
+        source = Source.objects.get(id=source_id)
         if source is None:
             return error_response_source_not_found(source_id)
 
@@ -352,13 +359,13 @@ def source_data(request, source_id):
                     'data': []
                 })
         # Check for column configuration overrides:
-        column_configs = SourceColumnConfigModel.objects.filter(source_id=source_id)
+        column_configs = SourceColumnConfig.objects.filter(source=source_id)
         for config in column_configs:
             # TODO: Validate this does what it is expected to do
-            columns[config.column_id] = {
+            columns[config.column] = {
                 'name': clean_csv_value(config.column_name),
                 'unit': config.unit,
-                'transform': SourceColumnConfigModel.Transformers.from_str(config.transform_name),
+                'transform': SourceColumnConfig.Transformers.from_str(config.transform_name),
                 'data': []
             }
         
@@ -380,8 +387,23 @@ def source_data(request, source_id):
 
 @login_required
 def graph_list(request):
-    # TODO
+    """
+    RESTful API endpoint for interacting with many graphs.
+
+    The main use of this endpoint is to either get a list of each of the graphs
+    that exist with some information about the graph, or to create a new graph.
+
+    Supported HTTP methods:
+    - GET: Gets a list of every graph.
+    - POST: Creates a new graph.
+    """
     if request.method == 'GET':
+        response_data = {
+            'result': 'error',
+            'message': 'Not implemented.'
+        }
+        return JsonResponse(response_data, status=500)
+    elif request.method == 'POST':
         response_data = {
             'result': 'error',
             'message': 'Not implemented.'
