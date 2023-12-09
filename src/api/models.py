@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MinLengthValidator
 
 class Source(models.Model):
     """
@@ -29,7 +29,7 @@ class Source(models.Model):
         db_table = 'source'
         db_table_comment = 'Describes the location of CSV data.'
 
-    name = models.CharField(max_length=128, unique=False)
+    name = models.CharField(max_length=128, unique=False, validators=[MinLengthValidator(4)])
     location = models.CharField(max_length=256)
     has_header = models.BooleanField(default=False)
 
@@ -102,7 +102,7 @@ class Graph(models.Model):
         db_table = 'graph'
         db_table_comment = 'Contains information about a graph'
 
-    name = models.CharField(max_length=128, unique=False)
+    name = models.CharField(max_length=128, unique=False, validators=[MinLengthValidator(4)])
     description = models.CharField(max_length=512)
 
 class GraphDataset(models.Model):
@@ -154,7 +154,7 @@ class GraphDataset(models.Model):
 
     graph = models.ForeignKey(Graph, on_delete=models.CASCADE)    
     plot_type = models.CharField(max_length=16, choices=PlotType.choices)
-    label = models.CharField(max_length=128)
+    label = models.CharField(max_length=128, validators=[MinLengthValidator(4)])
     is_axis = models.BooleanField(default=False)
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     column = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])

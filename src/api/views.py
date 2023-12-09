@@ -132,9 +132,6 @@ def source_list(request):
     elif request.method == 'POST':
         """
         The `POST` method will create a new source.
-
-        This expects a JSON body with `source_name` and `source_location`
-        fields.
         """
 
         # Check permissions:
@@ -406,17 +403,61 @@ def graph_list(request):
         if not request.user.has_perm('api.view_graph'):
             return error_response_no_perms()
         
-        response_data = {
-            'result': 'error',
-            'message': 'Not implemented.'
-        }
-        return JsonResponse(response_data, status=500)
+        # Get the graphs:
+        graphs = Graph.objects.all()
+
+        # Create a JSON array to write each graph to:
+        graph_json = []
+
+        # Add each graph to the graph JSON data:
+        for graph in graphs:
+            graph_json.append({
+                'id': source.id,
+                'name': source.name,
+                'description': source.description,
+            })
+        
+        # Return the graph JSON data:
+        return success_response(graph_json, 200)
     elif request.method == 'POST':
-        response_data = {
-            'result': 'error',
-            'message': 'Not implemented.'
-        }
-        return JsonResponse(response_data, status=500)
+        """
+        The `POST` method will create a new graph.
+        """
+        
+        # Check permissions:
+        if not request.user.has_perm('api.add_graph'):
+            return error_response_no_perms()
+        
+        # Get JSON request body:
+        try:
+            json_request = json.loads(request.body.decode('utf-8'))
+        except:
+            return error_response_invalid_json_body()
+        
+        # Get and validate JSON fields:
+        name = json_request['name']
+        if name is None:
+            return error_response_expected_field('name')
+        elif not isinstance(name, str):
+            return error_response_invalid_field('name')
+
+        description = json_request['description']
+        if description is None:
+            return error_response_expected_field('description')
+        elif not isinstance(description, str):
+            return error_response_invalid_field('description')
+        
+        # Create the graph:
+        try:
+            graph_instance = Graph(name=name, description=description)
+            graph_instance.save()
+        except ValidationError:
+            return error_response('Failed to validate graph data.', 400)
+        except Exception:
+            return error_response('Failed to create graph.', 500)
+        
+        # Return success response:
+        return success_response(None, 200, message='The graph was created successfully.')
     else:
         response_data = {
             'result': 'error',
