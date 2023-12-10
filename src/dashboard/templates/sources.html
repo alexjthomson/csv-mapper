@@ -11,9 +11,10 @@
             <button type="button" class="btn btn-primary rounded-pill shadow fw-bold" data-bs-toggle="modal" data-bs-target="#create-source-modal">Create Source</button>
         </div>
         {% endif %}
-
+        
     </div>
     <div class="table-responsive shadow-sm rounded mt-5 mb-5">
+        <p id="source-error" class="text-danger" style="display: none;"></p>
         <table class="table mb-0">
             <thead>
                 <tr>
@@ -30,15 +31,14 @@
 </div>
 <script>
     async function updateSources() {
-        try {
-            const response = await fetch('/api/source');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const data = await response.json();
-            const tableBody = $('#source-table');
-            tableBody.empty();
-            $.each(data.data, function(index, entry) {
+        $('#source-error').hide();
+        const response = await queryApi('/api/source/');
+        const tableBody = $('#source-table');
+        tableBody.empty();
+        if (response.status == 'error') {
+            $('#source-error').text(response.message).show();
+        } else {
+            $.each(response.data, function(index, entry) {
                 tableBody.append(
                     $('<tr>').append(
                         $('<td>').text(entry.name),
@@ -86,8 +86,6 @@
                     )
                 );
             });
-        } catch (error) {
-            console.error('Error fetching data: ', error);
         }
     }
     updateSources();
@@ -125,30 +123,20 @@
 </div>
 <script>
     async function submitCreateSourceForm() {
+        $('#source-error').hide();
         const formData = $('#create-source-form').serializeArray();
         formDataJson = {};
         $.each(formData, function(index, field) {
             formDataJson[field.name] = field.value;
         });
         formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-        try {
-            const response = await fetch('/api/source/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-                body: JSON.stringify(formDataJson)
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const responseData = await response.json();
+        const response = await queryApi('/api/source/', method='POST', body= JSON.stringify(formDataJson));
+        if (response.result == 'error') {
+            $('#source-error').text(response.message).show();
+        } else {
             await updateSources();
-            $('#create-source-modal').modal('hide');
-        } catch (error) {
-            console.error('Error submitting form: ', error);
         }
+        $('#create-source-modal').modal('hide');
     }
 </script>
 {% endif %}
@@ -185,13 +173,12 @@
         tableHead.empty();
         const tableBody = $('#inspect-source-tbody');
         tableBody.empty();
-        const response = await fetch(`/api/source/${id}/data/`);
-        const jsonResponse = await response.json();
-        if (jsonResponse.result != 'success') {
-            console.error(jsonResponse.message);
-            $('#inspect-source-error').text(jsonResponse.message).show();
+        const response = await queryApi(`/api/source/${id}/data/`);
+        if (response.result != 'success') {
+            console.error(response.message);
+            $('#inspect-source-error').text(response.message).show();
         } else {
-            const columns = jsonResponse.data;
+            const columns = response.data;
             const tableHeadRow = $('<tr>');
             var rowCount = -1;
             const columnCount = columns.length;
@@ -265,25 +252,15 @@
         $('#edit-source-location').val('');
         $('#edit-source-has_header').prop('checked', false);
         $('#edit-source-submit-button').attr('onclick', `submitEditSourceForm(${source_id})`);
-        try {
-            const response = await fetch(`/api/source/${source_id}/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                }
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-source-error').text(jsonResponse.message);
-                $('#edit-source-error').show();
-            } else {
-                const source = jsonResponse.data;
-                $('#edit-source-name').val(source.name);
-                $('#edit-source-location').val(source.location);
-                $('#edit-source-has-header').prop('checked', source.has_header);
-            }
-        } catch (error) {
-            console.error('Error fetching source data: ', error)
+        const response = await queryApi(`/api/source/${source_id}/`);
+        if (response.result != 'success') {
+            $('#edit-source-error').text(response.message);
+            $('#edit-source-error').show();
+        } else {
+            const source = response.data;
+            $('#edit-source-name').val(source.name);
+            $('#edit-source-location').val(source.location);
+            $('#edit-source-has-header').prop('checked', source.has_header);
         }
     }
     async function submitEditSourceForm(source_id) {
@@ -294,25 +271,13 @@
             formDataJson[field.name] = field.value;
         });
         formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-        try {
-            const response = await fetch(`/api/source/${source_id}/`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-                body: JSON.stringify(formDataJson)
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-source-error').text(jsonResponse.message);
-                $('#edit-source-error').show();
-            } else {
-                await updateSources();
-                $('#edit-source-modal').modal('hide');
-            }
-        } catch (error) {
-            console.error('Error submitting form: ', error);
+        const response = await queryApi(`/api/source/${source_id}/`, method = 'PUT', body = JSON.stringify(formDataJson));
+        if (response.result != 'success') {
+            $('#edit-source-error').text(response.message);
+            $('#edit-source-error').show();
+        } else {
+            await updateSources();
+            $('#edit-source-modal').modal('hide');
         }
     }
 </script>
@@ -342,25 +307,16 @@
         $('#delete-source-source-name').text(name);
     }
     async function submitDeleteSourceForm() {
+        $('#source-error').hide();
         const formData = $('#delete-source-form').serializeArray();
         const sourceId = formData[0].value;
-        try {
-            const response = await fetch(`/api/source/${sourceId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const responseData = await response.json();
+        const response = await queryApi(`/api/source/${sourceId}/`, method = 'DELETE');
+        if (response.result == 'error') {
+            $('#source-error').text(response.message).show();
+        } else {
             await updateSources();
-            $('#delete-source-modal').modal('hide');
-        } catch (error) {
-            console.error('Error submitting form: ', error);
         }
+        $('#delete-source-modal').modal('hide');
     }
 </script>
 {% endif %}

@@ -1,6 +1,7 @@
 async function queryApi(endpoint, method='GET', body=null) {
     const csrfTokens = $('input[name=csrfmiddlewaretoken]');
     if (csrfTokens.length == 0) {
+        console.error('No CSRF token found.');
         return {
             result: 'error',
             message: 'No CSRF token found.'
@@ -9,15 +10,16 @@ async function queryApi(endpoint, method='GET', body=null) {
     const csrfToken = csrfTokens[0].value;
     try {
         const response = await fetch(endpoint, {
-            method: 'GET',
+            method: method,
             headers: {
                 'X-CSRFToken': csrfToken,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'Content-Type': 'application/json'
             },
             body: body
         })
         return await response.json();
     } catch (error) {
+        console.error(error);
         return {
             result: 'error',
             message: error
