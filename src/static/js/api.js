@@ -8,6 +8,9 @@ async function queryApi(endpoint, method='GET', body=null) {
         };
     }
     const csrfToken = csrfTokens[0].value;
+    if (body != null && body.constructor == Object) {
+        body = JSON.stringify(body);
+    }
     try {
         const response = await fetch(endpoint, {
             method: method,
@@ -25,4 +28,15 @@ async function queryApi(endpoint, method='GET', body=null) {
             message: error
         }
     }
+}
+function formToJson(form) {
+    const data = form.serializeArray();
+    console.log(data);
+    json = {};
+    $.each(data, function(_index, field) {
+        var value = field.value;
+        if (value == 'on') { value = true; } else if (value == 'off') { value = false; }
+        json[field.name] = value;
+    });
+    return json;
 }

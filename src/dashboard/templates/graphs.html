@@ -5,6 +5,7 @@
         <div class="col">
             <h1>Graphs</h1>
             <p class="mb-0">View{% if perms.api.change_graph or perms.api.add_graph or perms.api.delete_graph %} and manage{% endif %} graphs.</p>
+            <p id="graph-error" class="mt-2 text-danger" style="display: none;"></p>
         </div>
         {% if perms.api.add_graph %}
         <div class="col d-flex align-items-center justify-content-end">
@@ -28,15 +29,14 @@
 </div>
 <script>
     async function updateGraphs() {
-        try {
-            const response = await fetch('/api/graph');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const data = await response.json();
+        $('#graph-error').hide();
+        const response = await queryApi('/api/graph');
+        if (response.status == 'error') {
+            $('#graph-error').text(`Failed to update graphs: ${response.message}`).hide();
+        } else {
             const tableBody = $('#graph-table');
             tableBody.empty();
-            $.each(data.data, function(index, entry) {
+            $.each(response.data, function(index, entry) {
                 tableBody.append(
                     $('<tr>').append(
                         $('<td>').text(entry.name),
@@ -78,8 +78,6 @@
                     )
                 );
             });
-        } catch (error) {
-            console.error('Error fetching data: ', error);
         }
     }
     updateGraphs();
@@ -104,6 +102,7 @@
                         <textarea id="create-graph-description" name="description" rows="3" class="form-control" aria-describedby="create-graph-description-help"></textarea>
                         <div id="create-graph-description-help" class="form-text">A short description of the graph.</div>
                     </div>
+                    <p id="create-graph-error" class="text-danger" style="display: none;"></p>
                     <button type="button" class="btn btn-primary" onclick="submitCreateGraphForm()">Create Graph</button>
                 </form>
             </div>
@@ -112,29 +111,13 @@
 </div>
 <script>
     async function submitCreateGraphForm() {
-        const formData = $('#create-graph-form').serializeArray();
-        formDataJson = {};
-        $.each(formData, function(index, field) {
-            formDataJson[field.name] = field.value;
-        });
-        formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-        try {
-            const response = await fetch('/api/graph/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-                body: JSON.stringify(formDataJson)
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const responseData = await response.json();
+        $('#create-graph-error').hide();
+        const response = await queryApi('/api/graph/', method='POST', body=formToJson($('#create-graph-form')));
+        if (response.result == 'success') {
             await updateGraphs();
             $('#create-graph-modal').modal('hide');
-        } catch (error) {
-            console.error('Error submitting form: ', error);
+        } else {
+            $('#create-graph-error').text(response.message).show();
         }
     }
 </script>
@@ -168,21 +151,14 @@
         tableHead.empty();
         const tableBody = $('#inspect-graph-tbody');
         tableBody.empty();
-        try {
-            const response = await fetch(`/api/graph/${id}/data/`);
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                console.error(jsonResponse.message);
-                $('#inspect-graph-error').text(jsonResponse.message).show();
-            } else {
-                chartData = jsonResponse.data;
-                chart.data = chartData.data;
-                chart.options = chartData.options;
-                chart.update();
-            }
-        } catch (error) {
-            console.error(error);
-            $('#inspect-graph-error').text(error).show();
+        const response = await queryApi(`/api/graph/${id}/data/`);
+        if (response.result != 'success') {
+            $('#inspect-graph-error').text(response.message).show();
+        } else {
+            chartData = response.data;
+            chart.data = chartData.data;
+            chart.options = chartData.options;
+            chart.update();
         }
     }
 </script>
@@ -243,6 +219,7 @@
                                     <option value="none">None</option>
                                     <option value="axis">Axis</option>
                                     <option value="line">Line</option>
+                                    <option value="bar">Bar</option>
                                     <option value="bubble">Bubble</option>
                                     <option value="pie">Pie</option>
                                     <option value="doughnut">Doughnut</option>
@@ -306,100 +283,60 @@
         {% if perms.api.add_graphdataset %}
         await showAddGraphDatasetEditor(graphId);
         {% endif %}
-        try {
-            const response = await fetch(`/api/graph/${graphId}/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                }
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-graph-error').text(jsonResponse.message).show();
-            } else {
-                const graph = jsonResponse.data;
-                $('#edit-graph-name').val(graph.name);
-                $('#edit-graph-description').val(graph.description);
-            }
-        } catch (error) {
-            console.error('Error fetching graph data: ', error);
+        const response = await queryApi(`/api/graph/${graphId}/`);
+        if (response.result != 'success') {
+            $('#edit-graph-error').text(response.message).show();
+        } else {
+            const graph = response.data;
+            $('#edit-graph-name').val(graph.name);
+            $('#edit-graph-description').val(graph.description);
+            await updateGraphDatasetTable(graphId);
         }
-        await updateGraphDatasetTable(graphId);
     }
     async function submitEditGraphForm(graphId) {
         $('#edit-graph-error').hide();
-        const formData = $('#edit-graph-form').serializeArray();
-        formDataJson = {};
-        $.each(formData, function(index, field) {
-            formDataJson[field.name] = field.value;
-        });
-        formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-        try {
-            const response = await fetch(`/api/graph/${graphId}/`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-                body: JSON.stringify(formDataJson)
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-graph-error').text(jsonResponse.message).show();
-            } else {
-                await updateGraphs();
-                $('#edit-graph-success').text('Updated graph successfully.').show();
-            }
-        } catch (error) {
-            console.error('Error submitting form: ', error);
-            $('#edit-graph-error').text(error).show();
+        const response = await queryApi(`/api/graph/${graphId}/`, method='PUT', body=formToJson($('#edit-graph-form')));
+        if (response.result != 'success') {
+            $('#edit-graph-error').text(response.message).show();
+        } else {
+            await updateGraphs();
+            $('#edit-graph-success').text('Updated graph successfully.').show();
         }
     }
     async function updateGraphDatasetTable(graphId) {
         $('#edit-graph-dataset-table').empty();
-        try {
-            const response = await fetch(`/api/graph/${graphId}/dataset/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                }
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                var tableBody = $('#edit-graph-dataset-table');
-                $.each(jsonResponse.data, function(index, entry) {
-                    tableBody.append(
-                        $('<tr>').append(
-                            $('<td>').text(entry.label),
-                            $('<td>').addClass('fit').append(
-                                $('<div>')
-                                    .addClass('table-action-buttons')
-                                    {% if perms.api.change_graphdataset %}
-                                    .append(
-                                        $('<button>')
-                                            .addClass('btn btn-primary rounded-pill fw-bold')
-                                            .attr('onclick', `editGraphDataSet(${graphId}, ${entry.id})`)
-                                            .text('Edit')
-                                    )
-                                    {% endif %}
-                                    {% if perms.api.delete_graphdataset %}
-                                    .append(
-                                        $('<button>')
-                                            .addClass('btn btn-danger rounded-pill fw-bold')
-                                            .attr('onclick', `deleteGraphDataSetConfirm(${graphId}, ${entry.id}, '${entry.label}')`)
-                                            .text('Delete')
-                                    )
-                                    {% endif %}
-                            )
+        const response = await queryApi(`/api/graph/${graphId}/dataset/`);
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            var tableBody = $('#edit-graph-dataset-table');
+            $.each(response.data, function(index, entry) {
+                tableBody.append(
+                    $('<tr>').append(
+                        $('<td>').text(entry.label),
+                        $('<td>').addClass('fit').append(
+                            $('<div>')
+                                .addClass('table-action-buttons')
+                                {% if perms.api.change_graphdataset %}
+                                .append(
+                                    $('<button>')
+                                        .addClass('btn btn-primary rounded-pill fw-bold')
+                                        .attr('onclick', `editGraphDataSet(${graphId}, ${entry.id})`)
+                                        .text('Edit')
+                                )
+                                {% endif %}
+                                {% if perms.api.delete_graphdataset %}
+                                .append(
+                                    $('<button>')
+                                        .addClass('btn btn-danger rounded-pill fw-bold')
+                                        .attr('onclick', `deleteGraphDataSetConfirm(${graphId}, ${entry.id}, '${entry.label}')`)
+                                        .text('Delete')
+                                )
+                                {% endif %}
                         )
                     )
-                });
-            }
-        } catch (error) {
-            console.error('Error fetching dataset data: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
+                )
+            });
         }
     }
     {% if perms.api.add_graphdataset or perms.api.change_graphdataset %}
@@ -423,32 +360,21 @@
         {% if perms.api.view_source %}
         const sources = $('#edit-graph-dataset-source').empty().val('');
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
-        try {
-            const response = await fetch('/api/source/', {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                }
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                const data = jsonResponse.data;
-                if (data.length > 0) {
-                    $.each(data, function(index, source) {
-                        sources.append(
-                            $('<option>').val(source.id).text(source.name)
-                        );
-                    });
-                    const default_source = data[0].id;
-                    sources.val(default_source);
-                    await updateSourceColumns();
-                }
+        const response = await queryApi('/api/source/');
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            const data = response.data;
+            if (data.length > 0) {
+                $.each(data, function(index, source) {
+                    sources.append(
+                        $('<option>').val(source.id).text(source.name)
+                    );
+                });
+                const default_source = data[0].id;
+                sources.val(default_source);
+                await updateSourceColumns();
             }
-        } catch (error) {
-            console.error('Error fetching dataset data: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
         }
         {% endif %}
     }
@@ -456,27 +382,16 @@
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
         {% if perms.api.view_source %}
         const selectedSource = $('#edit-graph-dataset-source').find(":selected").val();
-        try {
-            const response = await fetch(`/api/source/${selectedSource}/data/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                }
+        const response = await queryApi(`/api/source/${selectedSource}/data`);
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            const data = response.data;
+            $.each(data, function(index, column) {
+                sourceColumns.append(
+                    $('<option>').val(index).text(column.name != null ? column.name : `Column ${index}`)
+                );
             });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                const data = jsonResponse.data;
-                $.each(data, function(index, column) {
-                    sourceColumns.append(
-                        $('<option>').val(index).text(column.name != null ? column.name : `Column ${index}`)
-                    );
-                });
-            }
-        } catch (error) {
-            console.error('Error fetching dataset data: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
         }
         {% endif %}
     }
@@ -490,35 +405,20 @@
     async function submitAddGraphDataSet(graphId, datasetId) {
         const datasetPlot = $('#edit-graph-dataset-plot').val();
         const isAxis = datasetPlot == 'axis';
-        const requestBody = {
+        const response = await queryApi(`/api/graph/${graphId}/dataset/`, method='POST', body={
             label: $('#edit-graph-dataset-label').val(),
             plot_type: isAxis ? 'none' : datasetPlot,
             is_axis: isAxis,
             source_id: parseInt($('#edit-graph-dataset-source').val()),
             column_id: parseInt($('#edit-graph-dataset-source-column').val())
+        });
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            await showAddGraphDatasetEditor(graphId)
+            $('#edit-graph-dataset-success').text('Successfully created dataset.').show();
         }
-        try {
-            const response = await fetch(`/api/graph/${graphId}/dataset/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-                body: JSON.stringify(requestBody)
-            });
-            const jsonResponse = await response.json();
-            if (!response.ok) {
-                console.error(jsonResponse.message);
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                await showAddGraphDatasetEditor(graphId)
-                $('#edit-graph-dataset-success').text('Successfully created dataset.').show();
-            }
-            await updateGraphDatasetTable(graphId);
-        } catch (error) {
-            console.error('Error submitting form: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
-        }
+        await updateGraphDatasetTable(graphId);
     }
     {% endif %}
     {% if perms.api.edit_graphdataset %}
@@ -531,67 +431,41 @@
     async function editGraphDataSet(graphId, datasetId) {
         clearGraphDatasetEditor();
         await updateGraphDatasetEditor();
-        try {
-            const response = await fetch(`/api/graph/${graphId}/dataset/${datasetId}/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                }
-            });
-            const jsonResponse = await response.json();
-            if (jsonResponse.result != 'success') {
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                const data = jsonResponse.data;
-                $('#edit-graph-dataset-label').val(data.label).focus();
-                $('#edit-graph-dataset-plot').val(data.is_axis ? "axis" : data.plot_type);
-                $('#edit-graph-dataset-source').val(data.source_id);
-                $('#edit-graph-dataset-source-column').val(data.column_id);
-                showGraphDatasetButton('Update Dataset', `submitEditGraphDataSet(${graphId}, ${datasetId})`);
-                $('#edit-graph-dataset-cancel-button').attr('onclick', `cancelGraphDatasetEditor(${graphId})`).show();
-            }
-        } catch (error) {
-            console.error('Error fetching dataset data: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
+        const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`);
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            const data = response.data;
+            $('#edit-graph-dataset-label').val(data.label).focus();
+            $('#edit-graph-dataset-plot').val(data.is_axis ? "axis" : data.plot_type);
+            $('#edit-graph-dataset-source').val(data.source_id);
+            $('#edit-graph-dataset-source-column').val(data.column_id);
+            showGraphDatasetButton('Update Dataset', `submitEditGraphDataSet(${graphId}, ${datasetId})`);
+            $('#edit-graph-dataset-cancel-button').attr('onclick', `cancelGraphDatasetEditor(${graphId})`).show();
         }
     }
     async function submitEditGraphDataSet(graphId, datasetId) {
         const datasetPlot = $('#edit-graph-dataset-plot').val();
         const isAxis = datasetPlot == 'axis';
-        const requestBody = {
+        const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`, method='PUT', body={
             label: $('#edit-graph-dataset-label').val(),
             plot_type: isAxis ? 'none' : datasetPlot,
             is_axis: isAxis,
             source_id: parseInt($('#edit-graph-dataset-source').val()),
             column_id: parseInt($('#edit-graph-dataset-source-column').val())
+        });
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            {% if perms.api.add_graphdataset %}
+            await showAddGraphDatasetEditor()
+            {% else %}
+            clearGraphDatasetEditor();
+            await updateGraphDatasetEditor();
+            {% endif %}
+            $('#edit-graph-dataset-success').text('Successfully updated dataset.').show();
         }
-        try {
-            const response = await fetch(`/api/graph/${graphId}/dataset/${datasetId}/`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-                body: JSON.stringify(requestBody)
-            });
-            const jsonResponse = await response.json();
-            if (!response.ok) {
-                console.error(jsonResponse.message);
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                {% if perms.api.add_graphdataset %}
-                await showAddGraphDatasetEditor()
-                {% else %}
-                clearGraphDatasetEditor();
-                await updateGraphDatasetEditor();
-                {% endif %}
-                $('#edit-graph-dataset-success').text('Successfully updated dataset.').show();
-            }
-            await updateGraphDatasetTable(graphId);
-        } catch (error) {
-            console.error('Error submitting form: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
-        }
+        await updateGraphDatasetTable(graphId);
     }
     {% endif %}
     {% if perms.api.delete_graphdataset %}
@@ -602,25 +476,13 @@
         $('#delete-graph-dataset-modal').modal('show');
     }
     async function deleteGraphDataSet(graphId, datasetId) {
-        try {
-            const response = await fetch(`/api/graph/${graphId}/dataset/${datasetId}/`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-            });
-            const jsonResponse = await response.json();
-            if (!response.ok) {
-                console.error(jsonResponse.message);
-                $('#edit-graph-dataset-error').text(jsonResponse.message).show();
-            } else {
-                $('#edit-graph-dataset-success').text('Successfully deleted dataset.').show();
-            }
-            await updateGraphDatasetTable(graphId);
-        } catch (error) {
-            console.error('Error submitting form: ', error);
-            $('#edit-graph-dataset-error').text(error).show();
+        const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`, method='DELETE');
+        if (response.result != 'success') {
+            $('#edit-graph-dataset-error').text(response.message).show();
+        } else {
+            $('#edit-graph-dataset-success').text('Successfully deleted dataset.').show();
         }
+        await updateGraphDatasetTable(graphId);
         cancelDeleteGraphDataset();
     }
     function cancelDeleteGraphDataset() {
@@ -640,39 +502,25 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure that you want to delete <span id="delete-graph-graph-name" class="text-danger">this graph</span>?</p>
-                <form id="delete-graph-form">
-                    <input id="delete-graph-graph-id" name="graphId" type="hidden"/>
-                    <button type="button" class="btn btn-danger" onclick="submitDeleteGraphForm()">Delete Graph</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
-                </form>
+                <button id="delete-graph-button" type="button" class="btn btn-danger" onclick="">Delete Graph</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 <script>
-    function setDeleteModalInfo(id, name) {
-        $('#delete-graph-graph-id').val(id);
-        $('#delete-graph-graph-name').text(name);
+    function setDeleteModalInfo(graphId, graphName) {
+        $('#delete-graph-graph-name').text(graphName);
+        $('#delete-graph-button').attr('onclick', `submitDeleteGraphForm(${graphId})`)
     }
-    async function submitDeleteGraphForm() {
-        const formData = $('#delete-graph-form').serializeArray();
-        const graphId = formData[0].value;
-        try {
-            const response = await fetch(`/api/graph/${graphId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': $('input[name=csrfmiddlewaretoken]')[0].value
-                },
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const responseData = await response.json();
+    async function submitDeleteGraphForm(graphId) {
+        const response = await queryApi(`/api/graph/${graphId}/`, method='DELETE');
+        if (response.result != 'success') {
+            $('#graph-error').text(response.message).show();
+        } else {
             await updateGraphs();
-            $('#delete-graph-modal').modal('hide');
-        } catch (error) {
-            console.error('Error submitting form: ', error);
         }
+        $('#delete-graph-modal').modal('hide');
     }
 </script>
 {% endif %}
