@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -100,6 +100,41 @@ def error_response_graph_dataset_not_found(dataset_id):
     does not exist.
     """
     return error_response(f'Graph dataset `{dataset_id}` does not exist.', 404)
+
+def read_source_at(location):
+    """
+    Reads a CSV source at the given location and returns the raw CSV data.
+
+    Returns:
+    This function returns a tuple of two values:
+    1. Success state: If this is false, the 2nd tuple value will be a JSON error
+       response that should be returned immediately.
+    2. Response: This will be either a JSON error response (if the first tuple
+       value is false), or the CSV file.
+    """
+    # Parse the URL for the source:
+    try:
+        url = urlparse(location)
+    except URLError:
+        return False, error_response(f'Cannot parse location: `{location}`.', 400)
+    
+    # Read the CSV data from the source:
+    try:
+        if url.scheme in ('http', 'https', 'ftp'):
+            with urlopen(location) as response:
+                csv_content = response.read().decode('utf-8')
+        elif url.scheme == 'file':
+            with open(url.path, 'r') as file:
+                csv_content = file.read()
+        else:
+            return False, error_response(f'Cannot open location because `{url.scheme}` is not a supported URL scheme.', 400)
+    except Exception:
+        return False, error_response(f'Failed to read CSV data from location: `{location}`.', 400)
+
+    # Convert the CSV content into a CSV file:
+    csv_file = StringIO(csv_content)
+
+    return True, csv_file
 
 @login_required
 def source_list(request):
@@ -302,28 +337,11 @@ def source_data(request, source_id):
         if source is None:
             return error_response_source_not_found(source_id)
 
-        # Parse the URL to the source:
-        try:
-            source_url = urlparse(source.location)
-        except URLError:
-            return error_response(f'Cannot parse location: `{source.location}`.', 400)
-        
-        # Read the CSV data from the source:
-        try:
-            if source_url.scheme in ('http', 'https', 'ftp'):
-                with urlopen(source.location) as response:
-                    csv_content = response.read().decode('utf-8')
-            elif source_url.scheme == 'file':
-                with open(source_url.path, 'r') as file:
-                    csv_content = file.read()
-            else:
-                return error_response(f'Cannot open location because `{source_url.scheme}` is not a supported URL scheme.', 400)
-        except Exception:
-            return error_response(f'Failed to read CSV data from location: `{source.location}`.', 400)
-
-        # Convert the CSV content into a CSV file:
-        csv_file = StringIO(csv_content)
-        csv_reader = csv.reader(csv_file)
+        csv_read_result = read_source_at(source.location)
+        if not csv_read_result[0]:
+            # The read failed, this is an error response; we should return it:
+            return csv_read_result[1]
+        csv_reader = csv.reader(csv_read_result[1])
 
         # Get the first row of the CSV resource. This may correspond to the
         # header, or may be the first row of actual data. This is required to
@@ -357,16 +375,8 @@ def source_data(request, source_id):
                     'transform': None,
                     'data': []
                 })
-        # Check for column configuration overrides:
-        column_configs = SourceColumnConfig.objects.filter(source=source_id)
-        for config in column_configs:
-            # TODO: Validate this does what it is expected to do
-            columns[config.column] = {
-                'name': clean_csv_value(config.column_name),
-                'unit': config.unit,
-                'transform': SourceColumnConfig.Transformers.from_str(config.transform_name),
-                'data': []
-            }
+        
+        # TODO: Should we translate the CSV data here?
         
         # Collect the CSV rows:
         if source.has_header:
@@ -744,5 +754,112 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         return error_response_http_method_unsupported(request.method)
 
 @login_required
-def graph_data(request):
-    return error_response_http_method_unsupported(request.method)
+def graph_data(request, graph_id):
+    """
+    RESTful API endpoint for fetching graph data for ChartJs.
+    """
+    if request.method == 'GET':
+        """
+        The `GET` method is used to fetch ChartJs data for the graph.
+        """
+
+        # Check permissions:
+        if not request.user.has_perm('view_graph'):
+            return error_response_no_perms()
+        
+        # Get graph:
+        try:
+            graph = Graph.objects.get(id=graph_id)
+        except ObjectDoesNotExist:
+            return error_response_graph_not_found(graph_id)
+
+        # Get datasets for the graph:
+        datasets = GraphDataset.objects.filter(graph_id=graph_id)
+
+        # Create ChartJS fields:
+        data_json = {}
+        datasets_json = []
+        options_json = {
+            'scales': {
+                'x': {},
+                'y': {}
+            }
+        }
+        csv_files = {}
+
+        # Populate the data with the datasets:
+        if len(datasets) > 0:
+            for dataset in datasets:
+                if not dataset.is_axis and dataset.plot_type == 'none':
+                    # The dataset should not be plotted.
+                    pass
+                else:
+                    # The dataset should be plotted, we should read the dataset
+                    # CSV values:
+                    csv_file = csv_files.get(dataset.source.location)
+                    if csv_file is None:
+                        csv_read_result = read_source_at(dataset.source.location)
+                        if not csv_read_result[0]:
+                            # The read failed, this is an error response; we should
+                            # return the error response:
+                            return csv_read_result[1]
+                        csv_file = csv_read_result[1]
+                        csv_files[dataset.source.location] = csv_file
+                    else:
+                        csv_file.seek(0)
+                    csv_reader = csv.reader(csv_file)
+
+                    # If the source has a header, we should skip it:
+                    if dataset.source.has_header:
+                        next(csv_reader, None)
+                    # We should get the current row:
+                    current_row = next(csv_reader, None)
+                    if current_row is None:
+                        # There is no data to plot, we should skip this iteration:
+                        continue
+                    
+                    # We should check that the columns value is in bounds:
+                    column_id = dataset.column
+                    if not (0 <= column_id < len(current_row)):
+                        return error_response(f'Column is out of bounds (value: `{column_id}`, min: `0`, max: `{len(current_row)}`). Please update the column within the graph dataset to point to an existing column.', 400)
+                    
+                    # We should read the dataset data:
+                    dataset_data = []
+                    while current_row is not None:
+                        if column_id < len(current_row):
+                            dataset_data.append(current_row[column_id])
+                        else:
+                            dataset_data.append(None)
+                        current_row = next(csv_reader, None)
+
+                    # Determine if the dataset represents an axis or a plot:
+                    if dataset.is_axis:
+                        # The dataset represents an axis:
+                        data_json['labels'] = dataset_data
+                        options_json['scales']['x'] = {
+                            'title': {
+                                'display': True,
+                                'text': dataset.label
+                            }
+                        }
+                    else:
+                        # The dataset needs plotting:
+                        # TODO: Add CSV data translation here
+                        
+                        # Construct the dataset JSON object:
+                        datasets_json.append({
+                            'type': dataset.plot_type,
+                            'label': dataset.label if dataset.label is not None else f'Dataset {dataset.id}',
+                            'data': dataset_data
+                        })
+
+        # Assign the datasets:
+        data_json['datasets'] = datasets_json
+
+        # Return the ChartJS data:
+        return success_response({
+            'data': data_json,
+            'options': options_json,
+        }, 200)
+    else:
+        return error_response_http_method_unsupported(request.method)

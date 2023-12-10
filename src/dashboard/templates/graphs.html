@@ -50,7 +50,7 @@
                                         .addClass('btn btn-primary rounded-pill fw-bold')
                                         .attr('data-bs-toggle', 'modal')
                                         .attr('data-bs-target', '#inspect-graph-modal')
-                                        .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}", "${entry.location}")`)
+                                        .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}")`)
                                         .text('Inspect')
                                 )
                                 {% endif %}
@@ -148,26 +148,22 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="table-responsive rounded">
-                    <table class="table">
-                        <thead id="inspect-graph-thead">
-                        </thead>
-                        <tbody id="inspect-graph-tbody">
-                        </tbody>
-                    </table>
-                </div>
                 <p id="inspect-graph-error" class="text-danger" style="display: none;"></p>
-                <p id="inspect-graph-location" class="text-secondary"></p>
+                <canvas id="inspect-graph-canvas"></canvas>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    async function setInspectModalInfo(id, name, location, has_header) {
+    const context = $('#inspect-graph-canvas');
+    const chart = new Chart(context, {});
+    async function setInspectModalInfo(id, name) {
         $('#inspect-graph-error').hide();
         $('#inspect-graph-graph-id').val(id);
         $('#inspect-graph-label').text(name);
         $('#inspect-graph-location').text(location);
+        chart.data = {}; chart.options = {}; chart.update();
         const tableHead = $('#inspect-graph-thead')
         tableHead.empty();
         const tableBody = $('#inspect-graph-tbody');
@@ -178,37 +174,10 @@
             console.error(jsonResponse.message);
             $('#inspect-graph-error').text(jsonResponse.message).show();
         } else {
-            const columns = jsonResponse.data;
-            const tableHeadRow = $('<tr>');
-            var rowCount = -1;
-            const columnCount = columns.length;
-            const tableRows = [];
-            $.each(columns, function(index, column) {
-                if (column.unit != null) {
-                    tableHeadRow.append(
-                        $('<th>').append(
-                            $('<span>').text(column.name)
-                        ).append(
-                            $('<span>').addClass("text-secondary").text(` (${column.unit})`)
-                        )
-                    );
-                } else {
-                    tableHeadRow.append(
-                        $('<th>').text(column.name)
-                    );
-                }
-                if (rowCount == -1) {
-                    rowCount = column.data.length;
-                }
-            });
-            tableHead.append(tableHeadRow);
-            for (let i = 0; i < rowCount; i++) {
-                var row = $('<tr>');
-                for (let j = 0; j < columnCount; j++) {
-                    row.append($('<td>').text(columns[j].data[i]));
-                }
-                tableBody.append(row);
-            }
+            chartData = jsonResponse.data;
+            chart.data = chartData.data;
+            chart.options = chartData.options;
+            chart.update();
         }
     }
 </script>
