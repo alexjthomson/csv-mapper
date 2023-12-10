@@ -1,10 +1,9 @@
 {% extends 'base.html' %} {% block title %}Dashboard{% endblock %}
 {% block content %}
-<div class="container">
-    <div id="graph-grid" class="r-grid mt-5">
+<div class="container mt-5 mb-5">
+    <div id="graph-grid" class="r-grid">
         <div class="r-grid-item p-4 bg-white rounded shadow">
             <h1>Dashboard</h1>
-            <hr />
             <p>The dashboard contains a low-detail overview of every graph. To view a more detailed view of a graph, simply click the graph to expand it.</p>
         </div>
     </div>
@@ -36,10 +35,10 @@
                     const canvas = $('<canvas>').attr('id', `graph_${index}_chart`).hide();
                     graphDiv = $('<div>')
                         .attr('id', `graph_${index}`)
-                        .addClass('r-grid-item p-0 bg-white rounded shadow fade-in')
+                        .addClass('r-grid-item p-4 bg-white rounded shadow fade-in')
                         .append(
-                            $('<h1>').addClass('p-4 pb-1').attr('id', `graph_${index}_title`).text(`Loading`),
-                            $('<p>').addClass('p-4 pt-1 pb-0').attr('id', `graph_${index}_error`).hide(),
+                            $('<h1>').attr('id', `graph_${index}_title`).text(`Loading`),
+                            $('<p>').attr('id', `graph_${index}_error`).hide(),
                             $('<div>').addClass('graph-container').append(canvas)
                         );
                     charts[index] = new Chart(canvas, {})

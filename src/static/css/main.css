@@ -148,7 +148,6 @@ body {
 .graph-container {
     position: relative;
     min-height: 300px;
-    margin: 0 1.5rem 0 1.5rem;
 }
 .graph-container canvas {
     position: absolute;
@@ -169,5 +168,5 @@ body {
     }
     100% {
         opacity: 1;
-     }
+    }
 }
