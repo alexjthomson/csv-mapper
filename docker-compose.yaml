@@ -1,9 +1,9 @@
 ---
 version: "3.8"
-name:    "csv_mapper"
+name:    "csv"
 services:
   django:
-    container_name: "django"
+    container_name: "csv_django"
     build:
       context: "./docker/django"
       dockerfile: "dockerfile"
@@ -16,22 +16,20 @@ services:
     secrets:
       - "mysql_django_password"
     environment:
-      - "MYSQL_HOST=10.100.0.20"
+      - "MYSQL_HOST=mysql"
       - "MYSQL_PORT=3306"
       - "MYSQL_MAIN_DATABASE=main"
       - "MYSQL_GRAPH_DATABASE=graph"
       - "MYSQL_USER=django"
       - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
-    networks:
-      main:
-        ipv4_address: "10.100.0.10"
     ports:
       - "8000:8000"
     volumes:
       - "django_data:/data"
       - "django_src:/code"
   mysql:
-    container_name: "mysql"
+    container_name: "csv_mysql"
+    hostname: "mysql"
     image: "mysql:latest"
     restart: "unless-stopped"
     privileged: false
@@ -51,25 +49,19 @@ services:
       interval: "5s"
       start_period: "5s"
       timeout: "10s"
-    networks:
-      main:
-        ipv4_address: "10.100.0.20"
     volumes:
       - "mysql_data:/var/lib/mysql"
   phpmyadmin:
-    container_name: "phpmyadmin"
+    container_name: "csv_phpmyadmin"
     image:          "phpmyadmin/phpmyadmin:latest"
     restart:        "unless-stopped"
     privileged:     false
     depends_on:
       - "mysql"
     environment:
-      - "PMA_HOST=10.100.0.20"
+      - "PMA_HOST=mysql"
       - "PMA_PORT=3306"
       - "PMA_ARBITRARY=0"
-    networks:
-      main:
-        ipv4_address: "10.100.0.30"
     ports:
       - "18080:80"
 secrets:
@@ -96,10 +88,3 @@ volumes:
       type: "none"
       o: "bind"
       device: "./data/mysql"
-networks:
-  main:
-    driver: "bridge"
-    ipam:
-      config:
-        - subnet: "10.100.0.0/24"
-          gateway: "10.100.0.1"
