@@ -77,23 +77,17 @@ body {
 }
 @media (max-width: 800px) {
     .r-grid {
-        -webkit-column-count: 1;
-        -moz-column-count: 1;
-        column-count: 1;
+        grid-template-columns: repeat(1, 1fr);
     }
 }
 @media (min-width: 800px) {
     .r-grid {
-        -webkit-column-count: 2;
-        -moz-column-count: 2;
-        column-count: 2;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 @media (min-width: 1200px) {
     .r-grid {
-        -webkit-column-count: 3;
-        -moz-column-count: 3;
-        column-count: 3;
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 /* Messages */
