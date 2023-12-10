@@ -168,16 +168,21 @@
         tableHead.empty();
         const tableBody = $('#inspect-graph-tbody');
         tableBody.empty();
-        const response = await fetch(`/api/graph/${id}/data/`);
-        const jsonResponse = await response.json();
-        if (jsonResponse.result != 'success') {
-            console.error(jsonResponse.message);
-            $('#inspect-graph-error').text(jsonResponse.message).show();
-        } else {
-            chartData = jsonResponse.data;
-            chart.data = chartData.data;
-            chart.options = chartData.options;
-            chart.update();
+        try {
+            const response = await fetch(`/api/graph/${id}/data/`);
+            const jsonResponse = await response.json();
+            if (jsonResponse.result != 'success') {
+                console.error(jsonResponse.message);
+                $('#inspect-graph-error').text(jsonResponse.message).show();
+            } else {
+                chartData = jsonResponse.data;
+                chart.data = chartData.data;
+                chart.options = chartData.options;
+                chart.update();
+            }
+        } catch (error) {
+            console.error(error);
+            $('#inspect-graph-error').text(error).show();
         }
     }
 </script>

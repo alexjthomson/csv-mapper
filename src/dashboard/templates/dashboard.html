@@ -1,43 +1,70 @@
 {% extends 'base.html' %} {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="container">
-    <div class="r-grid mt-5">
+    <div id="graph-grid" class="r-grid mt-5">
         <div class="r-grid-item p-4 bg-white rounded shadow-lg">
             <h1>Dashboard</h1>
             <hr />
             <p>The dashboard contains a low-detail overview of every graph. To view a more detailed view of a graph, simply click the graph to expand it.</p>
         </div>
-        {% for graph in graphs %}
-        <div class="r-grid-item bg-white rounded shadow-lg">
-            <canvas id="graph_{{ graph.id }}"></canvas>
-            <script>
-                const ctx = document.getElementById('graph_{{ graph.id }}');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-                        datasets: [{
-                            label: '# of Votes',
-                            data: [12, 19, 3, 5, 2, 3],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            </script>
-        </div>
-        {% endfor %}
     </div>
 </div>
-<script>
-    Chart.defaults.global.defaultFontColor = '#777';
-    Chart.defaults.global.defaultFontFamily = 'monospace';
-</script>
+{% csrf_token %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    charts = {};
+    async function updateGrid() {
+        const graphResponse = await queryApi('/api/graph/');
+        grid = $('#graph-grid');
+        if (graphResponse.result == 'error') {
+            grid.empty().append(
+                $('<div>')
+                    .addClass('r-grid-item p-4 bg-danger rounded shadow-lg')
+                    .append(
+                        $('<h1>').text('Error'),
+                        $('<hr>'),
+                        $('<p>').text(`Failed to update grid: ${graphResponse.message}`)
+                    )
+            );
+        } else {
+            $.each(graphResponse.data, async function(index, graph) {
+                const graphDataResponse = await queryApi(`/api/graph/${graph.id}/data/`);
+                var graphDiv = $(`#graph_${index}`);
+                const isNew = graphDiv.length == 0;
+                if (isNew) {
+                    const canvas = $('<canvas>').attr('id', `graph_${index}_chart`).hide();
+                    graphDiv = $('<div>')
+                        .attr('id', `graph_${index}`)
+                        .addClass('r-grid-item p-0 bg-white rounded shadow-lg')
+                        .append(
+                            $('<h1>').attr('id', `graph_${index}_title`).text(`Loading`),
+                            $('<p>').attr('id', `graph_${index}_error`).hide(),
+                            canvas
+                        );
+                    charts[index] = new Chart(canvas, {})
+                    grid.append(graphDiv);
+                }
+                if (graphResponse.result == 'error') {
+                    $(`#graph_${index}_title`).text(`Failed to Load: ${graph.name}`).show();
+                    $(`#graph_${index}_error`).text(graphResponse.message).show();
+                } else {
+                    $(`#graph_${index}_title`).hide();
+                    $(`#graph_${index}_error`).hide();
+                    const graphData = graphDataResponse.data;
+                    chart = charts[index];
+                    chart.data = graphData.data;
+                    if (!isNew) {
+                        graphData.options['animation'] = { duration: 0 };
+                    }
+                    chart.options = graphData.options;
+                    $(`#graph_${index}_chart`).show();
+                    chart.update();
+                }
+            });
+            // TODO: Remove old charts here
+        }
+    }
+    updateGrid()
+    setInterval(updateGrid, 10000);
+</script>
 {% endblock %}

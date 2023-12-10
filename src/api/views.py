@@ -128,8 +128,8 @@ def read_source_at(location):
                 csv_content = file.read()
         else:
             return False, error_response(f'Cannot open location because `{url.scheme}` is not a supported URL scheme.', 400)
-    except Exception:
-        return False, error_response(f'Failed to read CSV data from location: `{location}`.', 400)
+    except Exception as exception:
+        return False, error_response(f'Failed to read CSV data from location `{location}`: {exception}.', 400)
 
     # Convert the CSV content into a CSV file:
     csv_file = StringIO(csv_content)
