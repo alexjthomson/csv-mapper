@@ -51,19 +51,6 @@ services:
       timeout: "10s"
     volumes:
       - "mysql_data:/var/lib/mysql"
-  phpmyadmin:
-    container_name: "csv_phpmyadmin"
-    image:          "phpmyadmin/phpmyadmin:latest"
-    restart:        "unless-stopped"
-    privileged:     false
-    depends_on:
-      - "mysql"
-    environment:
-      - "PMA_HOST=mysql"
-      - "PMA_PORT=3306"
-      - "PMA_ARBITRARY=0"
-    ports:
-      - "18080:80"
 secrets:
   mysql_root_password:
     file: "./.secrets/mysql_root_password"
