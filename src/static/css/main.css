@@ -24,18 +24,6 @@ body {
     text-decoration-color: #fff;
     text-decoration-thickness: 2px;
 }
-@media (max-width: 991.98px) {
-    .navbar-nav {
-        display: flex;
-        flex-direction: column;
-    }
-    .navbar-nav .nav-item:nth-child(1) {
-        order: 2;
-    }
-    .navbar-nav .nav-item:nth-child(2) {
-        order: 1;
-    }
-}
 .active {
     text-decoration: underline;
     text-decoration-color: #5694f0;
