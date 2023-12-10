@@ -63,14 +63,13 @@ body {
 }
 /* Responsive grid */
 .r-grid {
-    -webkit-column-count: 3;
-    -moz-column-count: 3;
-    column-count: 3;
-    column-gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 .r-grid .r-grid-item {
+    box-sizing: border-box;
     width: 100%;
-    margin: 0 0 8px 0;
     break-inside: avoid;
 }
 .r-grid .r-grid-item .r-grid-img {
@@ -144,4 +143,31 @@ body {
 }
 .min-width-column {
     min-width: 150px;
+}
+/* graph */
+.graph-container {
+    position: relative;
+    min-height: 300px;
+    margin: 0 1.5rem 0 1.5rem;
+}
+.graph-container canvas {
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+/* fade in */
+.fade-in {
+    animation: fadeInAnimation ease 0.5s;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+    opacity: 0;
+}
+@keyframes fadeInAnimation {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+     }
 }

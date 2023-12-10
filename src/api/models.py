@@ -145,13 +145,12 @@ class GraphDataset(models.Model):
         NONE = 'none', 'none'
         LINE = 'line', 'line'
         BAR = 'bar', 'bar'
-        # TODO: Uncomment the below options as support is added:
-        #BUBBLE = 'bubble', 'bubble'
-        #PIE = 'pie', 'pie'
-        #DOUGHNUT = 'doughnut', 'doughnut'
-        #POLAR_AREA = 'polar_area', 'polarArea'
-        #RADAR = 'radar', 'radar'
-        #SCATTER = 'scatter', 'scatter'
+        BUBBLE = 'bubble', 'bubble'
+        PIE = 'pie', 'pie'
+        DOUGHNUT = 'doughnut', 'doughnut'
+        POLAR_AREA = 'polar_area', 'polarArea'
+        RADAR = 'radar', 'radar'
+        SCATTER = 'scatter', 'scatter'
 
     graph = models.ForeignKey(Graph, on_delete=models.CASCADE)    
     plot_type = models.CharField(max_length=16, choices=PlotType.choices)

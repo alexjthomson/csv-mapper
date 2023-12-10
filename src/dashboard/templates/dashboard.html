@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container">
     <div id="graph-grid" class="r-grid mt-5">
-        <div class="r-grid-item p-4 bg-white rounded shadow-lg">
+        <div class="r-grid-item p-4 bg-white rounded shadow">
             <h1>Dashboard</h1>
             <hr />
             <p>The dashboard contains a low-detail overview of every graph. To view a more detailed view of a graph, simply click the graph to expand it.</p>
@@ -19,7 +19,7 @@
         if (graphResponse.result == 'error') {
             grid.empty().append(
                 $('<div>')
-                    .addClass('r-grid-item p-4 bg-danger rounded shadow-lg')
+                    .addClass('r-grid-item p-4 bg-danger rounded shadow')
                     .append(
                         $('<h1>').text('Error'),
                         $('<hr>'),
@@ -28,6 +28,7 @@
             );
         } else {
             $.each(graphResponse.data, async function(index, graph) {
+                await new Promise(resolve => setTimeout(resolve, index * 500));
                 const graphDataResponse = await queryApi(`/api/graph/${graph.id}/data/`);
                 var graphDiv = $(`#graph_${index}`);
                 const isNew = graphDiv.length == 0;
@@ -35,11 +36,11 @@
                     const canvas = $('<canvas>').attr('id', `graph_${index}_chart`).hide();
                     graphDiv = $('<div>')
                         .attr('id', `graph_${index}`)
-                        .addClass('r-grid-item p-0 bg-white rounded shadow-lg')
+                        .addClass('r-grid-item p-0 bg-white rounded shadow fade-in')
                         .append(
-                            $('<h1>').attr('id', `graph_${index}_title`).text(`Loading`),
-                            $('<p>').attr('id', `graph_${index}_error`).hide(),
-                            canvas
+                            $('<h1>').addClass('p-4 pb-1').attr('id', `graph_${index}_title`).text(`Loading`),
+                            $('<p>').addClass('p-4 pt-1 pb-0').attr('id', `graph_${index}_error`).hide(),
+                            $('<div>').addClass('graph-container').append(canvas)
                         );
                     charts[index] = new Chart(canvas, {})
                     grid.append(graphDiv);
@@ -48,14 +49,23 @@
                     $(`#graph_${index}_title`).text(`Failed to Load: ${graph.name}`).show();
                     $(`#graph_${index}_error`).text(graphResponse.message).show();
                 } else {
-                    $(`#graph_${index}_title`).hide();
-                    $(`#graph_${index}_error`).hide();
+                    $(`#graph_${index}_title`).text(graph.name).show();
+                    $(`#graph_${index}_error`).text(graph.description).show();
                     const graphData = graphDataResponse.data;
+                    const datasetCount = graphData.data.datasets.length;
                     chart = charts[index];
                     chart.data = graphData.data;
                     if (!isNew) {
                         graphData.options['animation'] = { duration: 0 };
                     }
+                    graphData.options['maintainAspectRatio'] = false;
+                    var pluginOptions = graphData.options['plugins'];
+                    if (pluginOptions == null) {
+                        pluginOptions = {};
+                        graphData.options['plugins'] = pluginOptions;
+                    }
+                    pluginOptions['legend'] = { display: datasetCount > 1 };
+                    pluginOptions['tooltip'] = { enabled: datasetCount > 0 && graphData.data.datasets[0].data.length <= 2500 };
                     chart.options = graphData.options;
                     $(`#graph_${index}_chart`).show();
                     chart.update();
@@ -65,6 +75,6 @@
         }
     }
     updateGrid()
-    setInterval(updateGrid, 10000);
+    setInterval(updateGrid, 20000);
 </script>
 {% endblock %}

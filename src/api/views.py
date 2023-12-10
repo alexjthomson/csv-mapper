@@ -786,6 +786,7 @@ def graph_data(request, graph_id):
             }
         }
         csv_files = {}
+        hide_scales = True
 
         # Populate the data with the datasets:
         if len(datasets) > 0:
@@ -831,6 +832,11 @@ def graph_data(request, graph_id):
                         else:
                             dataset_data.append(None)
                         current_row = next(csv_reader, None)
+                    
+                    # Remove trailing None values from the end of the dataset
+                    # data:
+                    while dataset_data and dataset_data[-1] is None:
+                        dataset_data.pop()
 
                     # Determine if the dataset represents an axis or a plot:
                     if dataset.is_axis:
@@ -846,12 +852,19 @@ def graph_data(request, graph_id):
                         # The dataset needs plotting:
                         # TODO: Add CSV data translation here
                         
+                        plot_type = GraphDataset.PlotType(dataset.plot_type)
                         # Construct the dataset JSON object:
                         datasets_json.append({
-                            'type': dataset.plot_type,
+                            'type': plot_type.label,
                             'label': dataset.label if dataset.label is not None else f'Dataset {dataset.id}',
                             'data': dataset_data
                         })
+                        # Check if the scales should be hidden:
+                        if plot_type is GraphDataset.PlotType.LINE or plot_type is GraphDataset.PlotType.BAR or plot_type is GraphDataset.PlotType.BUBBLE or plot_type is GraphDataset.PlotType.SCATTER:
+                            hide_scales = False
+
+        if hide_scales:
+            options_json.pop('scales')
 
         # Assign the datasets:
         data_json['datasets'] = datasets_json
