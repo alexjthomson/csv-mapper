@@ -566,7 +566,7 @@ def graph_dataset_list(request, graph_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('view_graphdataset'):
+        if not request.user.has_perm('api.view_graphdataset'):
             return error_response_no_perms()
         
         # Get the datasets that belong to the graph:
@@ -595,7 +595,7 @@ def graph_dataset_list(request, graph_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('add_graphdataset'):
+        if not request.user.has_perm('api.add_graphdataset'):
             return error_response_no_perms()
         
         # Get JSON request body:
@@ -663,7 +663,7 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('view_graphdataset'):
+        if not request.user.has_perm('api.view_graphdataset'):
             return error_response_no_perms()
         
         # Get the dataset:
@@ -686,7 +686,7 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('delete_graphdataset'):
+        if not request.user.has_perm('api.delete_graphdataset'):
             return error_response_no_perms()
         
         # Delete the dataset:
@@ -702,7 +702,7 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('change_graphdataset'):
+        if not request.user.has_perm('api.change_graphdataset'):
             return error_response_no_perms()
         
         # Get JSON request body:
@@ -764,7 +764,7 @@ def graph_data(request, graph_id):
         """
 
         # Check permissions:
-        if not request.user.has_perm('view_graph'):
+        if not request.user.has_perm('api.view_graph'):
             return error_response_no_perms()
         
         # Get graph:
