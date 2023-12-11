@@ -25,7 +25,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - "django_data:/data"
+      - "django_data:/data:ro"
       - "django_src:/code"
   mysql:
     container_name: "csv_mysql"
