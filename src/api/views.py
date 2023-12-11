@@ -17,9 +17,6 @@ from urllib.error import URLError
 
 import logging
 
-logger = logging.getLogger('api')
-logger.debug('API logger created.')
-
 ALLOWED_CSV_CHARSET='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\({)}[]+<>,!?£$%^&* '
 
 def clean_csv_value(value):
