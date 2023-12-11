@@ -1,6 +1,8 @@
 # CSV Mapper
 An online platform that provides real-time graphs driven by CSV data.
 
+![Screenshot of the application dashboard](https://github.com/alexjthomson1882/csv-mapper/blob/master/docs/images/screenshots/dashboard/user_standard.png)
+
 ## Rationale
 This project was created to allow Gamma Telecom to view performance critical
 business systems.
