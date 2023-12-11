@@ -9,7 +9,7 @@
         </div>
         {% if perms.api.add_graph %}
         <div class="col d-flex align-items-center justify-content-end">
-            <button type="button" class="btn btn-primary rounded-pill shadow fw-bold" data-bs-toggle="modal" data-bs-target="#create-graph-modal">Create Graph</button>
+            <button type="button" class="btn btn-primary rounded-pill shadow fw-bold" data-bs-toggle="modal" data-bs-target="#create-graph-modal" onclick="clearCreateGraphForm()">Create Graph</button>
         </div>
         {% endif %}
     </div>
@@ -129,6 +129,10 @@
     </div>
 </div>
 <script>
+    function clearCreateGraphForm() {
+        $('#create-graph-name').val('');
+        $('#create-graph-description').val('');
+    }
     async function submitCreateGraphForm() {
         $('#create-graph-error').hide();
         const response = await queryApi('/api/graph/', method='POST', body=formToJson($('#create-graph-form')));
