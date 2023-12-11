@@ -141,26 +141,32 @@
 <script>
     const context = $('#inspect-graph-canvas');
     const chart = new Chart(context, {});
-    async function setInspectModalInfo(id, name) {
+    var updateGraph = false;
+    function setInspectModalInfo(graphId, graphLabel) {
         $('#inspect-graph-error').hide();
-        $('#inspect-graph-graph-id').val(id);
-        $('#inspect-graph-label').text(name);
-        $('#inspect-graph-location').text(location);
+        $('#inspect-graph-label').text(graphLabel);
         chart.data = {}; chart.options = {}; chart.update();
-        const tableHead = $('#inspect-graph-thead')
-        tableHead.empty();
-        const tableBody = $('#inspect-graph-tbody');
-        tableBody.empty();
-        const response = await queryApi(`/api/graph/${id}/data/`);
+        updateGraph = true;
+        updateInspectModal(graphId, true);
+    }
+    async function updateInspectModal(graphId, firstTime) {
+        const response = await queryApi(`/api/graph/${graphId}/data/`);
         if (response.result != 'success') {
             $('#inspect-graph-error').text(response.message).show();
         } else {
             chartData = response.data;
             chart.data = chartData.data;
+            chartData.options['animation'] = { duration: firstTime ? 1000 : 0 };
             chart.options = chartData.options;
             chart.update();
         }
+        if (updateGraph) {
+            setTimeout(updateInspectModal.bind(null, graphId, false), 20000);
+        }
     }
+    $("#inspect-graph-modal").on("hidden.bs.modal", function () {
+        updateGraph = false;
+    });
 </script>
 {% endif %}
 {% if perms.api.change_graph %}
