@@ -96,25 +96,8 @@
                     $(`#graph-${index}-title`).text(graph.name).show();
                     $(`#graph-${index}-description`).text(graph.description).show();
                     $(`#graph-${index}-error`).hide();
-                    const graphData = graphDataResponse.data;
-                    if (graphData != undefined) {
-                        const datasetCount = graphData.data.datasets.length;
-                        chart = charts[index];
-                        chart.data = graphData.data;
-                        if (!isNew) {
-                            graphData.options['animation'] = { duration: 0 };
-                        }
-                        graphData.options['maintainAspectRatio'] = false;
-                        var pluginOptions = graphData.options['plugins'];
-                        if (pluginOptions == null) {
-                            pluginOptions = {};
-                            graphData.options['plugins'] = pluginOptions;
-                        }
-                        pluginOptions['legend'] = { display: datasetCount > 1 };
-                        pluginOptions['tooltip'] = { enabled: datasetCount > 0 && graphData.data.datasets[0].data.length <= 2500 };
-                        chart.options = graphData.options;
+                    if (updateChart(charts[index], graphDataResponse.data, isNew)) {
                         $(`#graph-${index}-chart`).show();
-                        chart.update();
                         $(`#graph-${index}-view`).attr('href', `/graphs?id=${graph.id}&method=view`).show();
                         {% if perms.api.change_graph %}
                         $(`#graph-${index}-edit`).attr('href', `/graphs?id=${graph.id}&method=edit`).show();

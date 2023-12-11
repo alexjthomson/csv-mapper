@@ -101,7 +101,6 @@ class GraphDataset(models.Model):
         NONE = 'none', 'none'
         LINE = 'line', 'line'
         BAR = 'bar', 'bar'
-        BUBBLE = 'bubble', 'bubble'
         PIE = 'pie', 'pie'
         DOUGHNUT = 'doughnut', 'doughnut'
         POLAR_AREA = 'polar_area', 'polarArea'

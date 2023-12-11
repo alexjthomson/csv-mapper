@@ -867,7 +867,7 @@ def graph_data(request, graph_id):
                             'data': dataset_data
                         })
                         # Check if the scales should be hidden:
-                        if plot_type is GraphDataset.PlotType.LINE or plot_type is GraphDataset.PlotType.BAR or plot_type is GraphDataset.PlotType.BUBBLE or plot_type is GraphDataset.PlotType.SCATTER:
+                        if plot_type is GraphDataset.PlotType.LINE or plot_type is GraphDataset.PlotType.BAR or plot_type is GraphDataset.PlotType.SCATTER:
                             hide_scales = False
 
         if hide_scales:

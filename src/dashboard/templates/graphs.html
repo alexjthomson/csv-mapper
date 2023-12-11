@@ -180,11 +180,7 @@
         if (response.result != 'success') {
             $('#inspect-graph-error').text(response.message).show();
         } else {
-            chartData = response.data;
-            chart.data = chartData.data;
-            chartData.options['animation'] = { duration: firstTime ? 1000 : 0 };
-            chart.options = chartData.options;
-            chart.update();
+            updateChart(chart, response.data, firstTime);
         }
         if (updateGraph) {
             setTimeout(updateInspectModal.bind(null, graphId, false), 20000);
@@ -252,7 +248,6 @@
                                     <option value="axis">Axis</option>
                                     <option value="line">Line</option>
                                     <option value="bar">Bar</option>
-                                    <option value="bubble">Bubble</option>
                                     <option value="pie">Pie</option>
                                     <option value="doughnut">Doughnut</option>
                                     <option value="polar_area">Polar Area</option>
