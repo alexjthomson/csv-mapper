@@ -37,8 +37,9 @@
                         .attr('id', `graph_${index}`)
                         .addClass('r-grid-item p-4 bg-white rounded shadow fade-in')
                         .append(
-                            $('<h1>').attr('id', `graph_${index}_title`).text(`Loading`),
-                            $('<p>').attr('id', `graph_${index}_error`).hide(),
+                            $('<h1>').attr('id', `graph_${index}_title`).text('Loading'),
+                            $('<p>').attr('id', `graph_${index}_description`).hide(),
+                            $('<p>').attr('id', `graph_${index}_error`).addClass('text-danger').hide(),
                             $('<div>').addClass('graph-container').append(canvas)
                         );
                     charts[index] = new Chart(canvas, {})
@@ -46,28 +47,34 @@
                 }
                 if (graphResponse.result == 'error') {
                     $(`#graph_${index}_title`).text(`Failed to Load: ${graph.name}`).show();
+                    $(`#graph_${index}_description`).hide();
                     $(`#graph_${index}_error`).text(graphResponse.message).show();
                 } else {
                     $(`#graph_${index}_title`).text(graph.name).show();
-                    $(`#graph_${index}_error`).text(graph.description).show();
+                    $(`#graph_${index}_description`).text(graph.description).show();
+                    $(`#graph_${index}_error`).hide();
                     const graphData = graphDataResponse.data;
-                    const datasetCount = graphData.data.datasets.length;
-                    chart = charts[index];
-                    chart.data = graphData.data;
-                    if (!isNew) {
-                        graphData.options['animation'] = { duration: 0 };
+                    if (graphData != undefined) {
+                        const datasetCount = graphData.data.datasets.length;
+                        chart = charts[index];
+                        chart.data = graphData.data;
+                        if (!isNew) {
+                            graphData.options['animation'] = { duration: 0 };
+                        }
+                        graphData.options['maintainAspectRatio'] = false;
+                        var pluginOptions = graphData.options['plugins'];
+                        if (pluginOptions == null) {
+                            pluginOptions = {};
+                            graphData.options['plugins'] = pluginOptions;
+                        }
+                        pluginOptions['legend'] = { display: datasetCount > 1 };
+                        pluginOptions['tooltip'] = { enabled: datasetCount > 0 && graphData.data.datasets[0].data.length <= 2500 };
+                        chart.options = graphData.options;
+                        $(`#graph_${index}_chart`).show();
+                        chart.update();
+                    } else {
+                        $(`#graph_${index}_error`).text("Failed to load.").show();
                     }
-                    graphData.options['maintainAspectRatio'] = false;
-                    var pluginOptions = graphData.options['plugins'];
-                    if (pluginOptions == null) {
-                        pluginOptions = {};
-                        graphData.options['plugins'] = pluginOptions;
-                    }
-                    pluginOptions['legend'] = { display: datasetCount > 1 };
-                    pluginOptions['tooltip'] = { enabled: datasetCount > 0 && graphData.data.datasets[0].data.length <= 2500 };
-                    chart.options = graphData.options;
-                    $(`#graph_${index}_chart`).show();
-                    chart.update();
                 }
             });
             // TODO: Remove old charts here
