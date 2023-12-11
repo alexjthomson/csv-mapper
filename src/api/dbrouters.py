@@ -1,5 +1,3 @@
-from .models import Source, Graph, SourceColumnConfig
-
 class ApiRouter(object):
     """
     A custom database router for the API app.
