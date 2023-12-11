@@ -45,6 +45,7 @@
                         $('<td>').text(entry.location),
                         $('<td>').append(
                             $('<input>')
+                                .addClass('form-check-input')
                                 .attr('type', 'checkbox')
                                 .attr('onclick', 'return false;')
                                 .prop('checked', entry.has_header)

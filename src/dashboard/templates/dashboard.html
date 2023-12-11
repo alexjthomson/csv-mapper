@@ -4,7 +4,43 @@
     <div id="graph-grid" class="r-grid">
         <div class="r-grid-item p-4 bg-white rounded shadow">
             <h1>Dashboard</h1>
-            <p>The dashboard contains a low-detail live overview of each graph.</p>
+            <p>The dashboard provides a real-time, high-level overview of each CSV data driven graph, keeping you informed at a glance.</p>
+            <h5>Permissions</h5>
+            <p class="mb-1">You are currently logged in as <span class="text-primary">{{ user.username }}</span>. You have permission to:</p>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">View</th>
+                        <th scope="col">Create</th>
+                        <th scope="col">Modify</th>
+                        <th scope="col">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td scope="col">Graph</td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.view_graph %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.add_graph %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.change_graph %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.delete_graph %}checked{% endif %}/></td>
+                    </tr>
+                    <tr>
+                        <td scope="col">Dataset</td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.view_graphdataset %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.add_graphdataset %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.change_graphdataset %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.delete_graphdataset %}checked{% endif %}/></td>
+                    </tr>
+                    <tr>
+                        <td scope="col">Source</td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.view_source %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.add_source %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.change_source %}checked{% endif %}/></td>
+                        <td scope="col"><input class="form-check-input" type="checkbox" onclick="return false;" {% if perms.api.delete_source %}checked{% endif %}/></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
