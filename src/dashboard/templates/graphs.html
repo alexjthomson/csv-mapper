@@ -386,7 +386,7 @@
     function showGraphDatasetButton(text, onclick) {
         $('#edit-graph-dataset-submit-button').attr('onclick', onclick).text(text).show();
     }
-    async function updateGraphDatasetEditor() {
+    async function updateGraphDatasetEditor(updateColumns = true) {
         $('#edit-graph-dataset-error').hide();
         $('#edit-graph-dataset-success').hide();
         {% if perms.api.view_source %}
@@ -403,9 +403,11 @@
                         $('<option>').val(source.id).text(source.name)
                     );
                 });
-                const default_source = data[0].id;
-                sources.val(default_source);
-                await updateSourceColumns();
+                if (updateColumns) {
+                    const default_source = data[0].id;
+                    sources.val(default_source);
+                    await updateSourceColumns();
+                }
             }
         }
         {% endif %}
@@ -462,7 +464,7 @@
     }
     async function editGraphDataSet(graphId, datasetId) {
         clearGraphDatasetEditor();
-        await updateGraphDatasetEditor();
+        await updateGraphDatasetEditor(false);
         const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
@@ -471,6 +473,7 @@
             $('#edit-graph-dataset-label').val(data.label).focus();
             $('#edit-graph-dataset-plot').val(data.is_axis ? "axis" : data.plot_type);
             $('#edit-graph-dataset-source').val(data.source_id);
+            await updateSourceColumns();
             $('#edit-graph-dataset-source-column').val(data.column_id);
             showGraphDatasetButton('Update Dataset', `submitEditGraphDataSet(${graphId}, ${datasetId})`);
             $('#edit-graph-dataset-cancel-button').attr('onclick', `cancelGraphDatasetEditor(${graphId})`).show();
