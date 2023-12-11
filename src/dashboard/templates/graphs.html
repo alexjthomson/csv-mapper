@@ -493,7 +493,7 @@
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
             {% if perms.api.add_graphdataset %}
-            await showAddGraphDatasetEditor()
+            await showAddGraphDatasetEditor(graphId)
             {% else %}
             clearGraphDatasetEditor();
             await updateGraphDatasetEditor();
