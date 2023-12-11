@@ -49,6 +49,7 @@ dependencies listed above have been installed on the host machine.
   be installed via the `pip` command when building the container.
 - `/docs/`: Contains documentation about the project. This contains planning
   documents written in markdown that can be viewed directly on GitHub.
+- `/log/django/`: Contains log files for the Django application.
 - `/src/`: Contains the Django project source code. The Django container has
   read-write access to this directory.
 - `/docker-compose.yaml`: Docker compose file used to configure and run the

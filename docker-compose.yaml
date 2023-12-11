@@ -16,6 +16,7 @@ services:
     secrets:
       - "mysql_django_password"
     environment:
+      - "DJANGO_LOG_LEVEL=WARNING"
       - "MYSQL_HOST=mysql"
       - "MYSQL_PORT=3306"
       - "MYSQL_MAIN_DATABASE=main"
@@ -27,6 +28,7 @@ services:
     volumes:
       - "django_data:/data:ro"
       - "django_src:/code"
+      - "django_log:/log"
   mysql:
     container_name: "csv_mysql"
     hostname: "mysql"
@@ -69,6 +71,12 @@ volumes:
       type: "none"
       o: "bind"
       device: "./src"
+  django_log:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./log/django"
   mysql_data:
     driver: "local"
     driver_opts:

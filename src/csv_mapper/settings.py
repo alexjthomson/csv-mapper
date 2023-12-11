@@ -138,3 +138,82 @@ LOGIN_URL = '/account/login'
 LOGIN_REDIRECT_URL = '/account/login'
 LOGOUT_REDIRECT_URL = '/account/login'
 PASSWORD_RESET_TIMEOUT = 86400
+
+log_level = os.getenv('DJANGO_LOG_LEVEL', 'WARNING')
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{name} {levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{'
+        }
+    },
+    'handlers': {
+        'application_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': '/log/application.log',
+            'level': log_level
+        },
+        'core_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': '/log/core.log',
+            'level': log_level
+        },
+        'django_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': '/log/django.log',
+            'level': log_level
+        },
+        'request_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': '/log/request.log',
+            'level': log_level
+        },
+        'db_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': '/log/db.log',
+            'level': log_level
+        }
+    },
+    'loggers': {
+        '': {
+            'level': log_level,
+            'handlers': [ 'application_file' ],
+        },
+        'root': {
+            'level': log_level,
+            'handlers': [ 'application_file' ],
+        },
+        'core': {
+            'level': log_level,
+            'handlers': [ 'core_file' ],
+            'propagate': True,
+        },
+        'django': {
+            'level': log_level,
+            'handlers': [ 'django_file' ],
+            'propagate': True,
+        },
+        'django.request': {
+            'level': log_level,
+            'handlers': [ 'request_file' ],
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'level': log_level,
+            'handlers': [ 'db_file' ],
+            'propagate': True,
+        }
+    }
+}

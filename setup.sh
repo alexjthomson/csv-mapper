@@ -6,6 +6,10 @@
 mkdir ./data
 mkdir ./data/mysql
 
+# Log directory:
+mkdir ./log
+mkdir ./log/django
+
 # Source directory:
 mkdir ./src
 

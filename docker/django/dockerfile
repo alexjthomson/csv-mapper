@@ -8,8 +8,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 RUN mkdir /data
+RUN chown 1000:1000 /data
+RUN mkdir /log
+RUN chown 1000:1000 /log
 
 WORKDIR /code
+RUN chown 1000:1000 /code
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 RUN rm /code/requirements.txt

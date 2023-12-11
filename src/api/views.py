@@ -2,14 +2,23 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+
 from .models import Source, Graph, GraphDataset
+
 import csv
 import json
+from io import StringIO
+
 import asyncio
+
 from urllib.parse import urlparse
 from urllib.request import urlopen
 from urllib.error import URLError
-from io import StringIO
+
+import logging
+
+logger = logging.getLogger('api')
+logger.debug('API logger created.')
 
 ALLOWED_CSV_CHARSET='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\({)}[]+<>,!?£$%^&* '
 
