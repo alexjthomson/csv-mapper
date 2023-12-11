@@ -403,9 +403,9 @@
                         $('<option>').val(source.id).text(source.name)
                     );
                 });
+                const default_source = data[0].id;
+                sources.val(default_source);
                 if (updateColumns) {
-                    const default_source = data[0].id;
-                    sources.val(default_source);
                     await updateSourceColumns();
                 }
             }
