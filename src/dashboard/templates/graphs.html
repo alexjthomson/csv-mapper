@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col">
             <h1>Graphs</h1>
-            <p class="mb-0">View{% if perms.api.change_graph or perms.api.add_graph or perms.api.delete_graph %} and manage{% endif %} graphs.</p>
+            <p class="mb-0">View{% if perms.api.change_graph or perms.api.add_graph or perms.api.delete_graph %} and manage{% endif %} real-time CSV data driven graphs.</p>
             <p id="graph-error" class="mt-2 text-danger" style="display: none;"></p>
         </div>
         {% if perms.api.add_graph %}

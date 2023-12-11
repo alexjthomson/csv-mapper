@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col">
             <h1>Sources</h1>
-            <p class="mb-0">View{% if perms.api.change_source or perms.api.add_source or perms.api.delete_source %} and manage{% endif %} CSV sources. These are used to supply data to graphs.</p>
+            <p class="mb-0">View{% if perms.api.change_source or perms.api.add_source or perms.api.delete_source %} and manage{% endif %} CSV sources. These are used to supply datasets to graphs.</p>
         </div>
         {% if perms.api.add_source %}
         <div class="col d-flex align-items-center justify-content-end">
