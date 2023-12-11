@@ -427,7 +427,7 @@
         await updateGraphDatasetTable(graphId);
     }
     {% endif %}
-    {% if perms.api.edit_graphdataset %}
+    {% if perms.api.change_graphdataset %}
     async function cancelGraphDatasetEditor(graphId) {
         clearGraphDatasetEditor();
         {% if perms.api.add_graphdataset %}
