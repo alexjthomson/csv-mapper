@@ -33,50 +33,6 @@ class Source(models.Model):
     location = models.CharField(max_length=256)
     has_header = models.BooleanField(default=False)
 
-class SourceColumnConfig(models.Model):
-    """
-    Contains configuration options for a singular column within a data-source.
-
-    Attributes:
-    - source_id (int, foreign key): ID of the data-source that the configuration
-      applies to.
-    - column_id (int): Zero-indexed ID of the column within the referenced
-      data-source that the configuration applies to.
-    - transform_type (str): An enum-like variable that can be used to transform
-      raw values within the data-source column into another value using a
-      transformer. The transformer is referenced by name in this field.
-    - unit (str): The unit of the data within the data-source column. For
-      instance, if the column is describing a bit-rate in megabits per second,
-      this may be equal to `Mbps`.
-    """
-
-    class Meta:
-        """
-        Metadata for the data-source column config model.
-
-        Attributes:
-        - app_label (str): Label of the app that the model belongs to.
-        - db_table (str): Name of the table that the model corresponds to.
-        - db_table_comment (str): Comment for the database table.
-        """
-
-        app_label = 'api'
-        db_table = 'source_column_config'
-        db_table_comment = 'Contains configuration for individual columns of data-sources.'
-
-    class Transformers(models.TextChoices):
-        """
-        Maps a transform name to a transformer function capable of transforming
-        a column within a data-source into a new format.
-        """
-        NONE = 'none', ''
-
-    source = models.ForeignKey(Source, on_delete=models.CASCADE)
-    column = models.PositiveSmallIntegerField(validators=[MinValueValidator(0)])
-    column_name = models.CharField(max_length=128)
-    transform_name = models.CharField(max_length=128, choices=Transformers.choices, default=Transformers.NONE)
-    unit = models.CharField(max_length=32)
-
 class Graph(models.Model):
     """
     Contains the information required to describe a graph.

@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import Source, SourceColumnConfig, Graph, GraphDataset
+from .models import Source, Graph, GraphDataset
 import csv
 import json
 import asyncio
@@ -240,12 +240,13 @@ def source_detail(request, source_id):
         # Check permissions:
         if not request.user.has_perm('api.view_source'):
             return error_response_no_perms()
-
-        source = Source.objects.get(id=source_id)
-        if source is not None:
-            return success_response({ 'name': source.name, 'location': source.location, 'has_header': source.has_header }, 200)
-        else:
+        
+        # Get requested source:
+        try:
+            source = Source.objects.get(id=source_id)
+        except ObjectDoesNotExist:
             return error_response_source_not_found(source_id)
+        return success_response({ 'name': source.name, 'location': source.location, 'has_header': source.has_header }, 200)
     elif request.method == 'DELETE':
         """
         The `DELETE` method will delete a single source.
@@ -261,14 +262,15 @@ def source_detail(request, source_id):
         if not request.user.has_perm('api.delete_source'):
             return error_response_no_perms()
         
-        # Get the source:
-        source = Source.objects.get(id=source_id)
-        if source is not None:
-            # The source exists, we can now delete it:
-            source.delete()
-            return success_response(f'Deleted source `{source_id}`.', 200)
-        else:
+        # Get the requested source:
+        try:
+            source = Source.objects.get(id=source_id)
+        except ObjectDoesNotExist:
             return error_response_source_not_found(source_id)
+        
+        # Delete the source:
+        source.delete()
+        return success_response(f'Deleted source `{source_id}`.', 200)
     elif request.method == 'PUT':
         """
         The `PUT` method updates an entire source. In simple terms, this will
@@ -308,17 +310,18 @@ def source_detail(request, source_id):
         elif not isinstance(has_header, bool):
             return error_response_invalid_field('has_header')
 
-        # Get the source:
-        source = Source.objects.get(id=source_id)
-        if source is not None:
-            # The source exists, we can now modify it:
-            source.name = name.strip()
-            source.location = location.strip()
-            source.has_header = has_header
-            source.save()
-            return success_response(None, 200, message=f'Updated source `{source_id}`.')
-        else:
+        # Get the requested source:
+        try:
+            source = Source.objects.get(id=source_id)
+        except ObjectDoesNotExist:
             return error_response_source_not_found(source_id)
+        
+        # Modify the source:
+        source.name = name.strip()
+        source.location = location.strip()
+        source.has_header = has_header
+        source.save()
+        return success_response(None, 200, message=f'Updated source `{source_id}`.')
     else:
         return error_response_http_method_unsupported(request.method)
 
@@ -332,9 +335,10 @@ def source_data(request, source_id):
         if not request.user.has_perm('api.view_source'):
             return error_response_no_perms()
 
-        # Get the source:
-        source = Source.objects.get(id=source_id)
-        if source is None:
+        # Get the requested source:
+        try:
+            source = Source.objects.get(id=source_id)
+        except ObjectDoesNotExist:
             return error_response_source_not_found(source_id)
 
         csv_read_result = read_source_at(source.location)
@@ -375,8 +379,6 @@ def source_data(request, source_id):
                     'transform': None,
                     'data': []
                 })
-        
-        # TODO: Should we translate the CSV data here?
         
         # Collect the CSV rows:
         if source.has_header:
@@ -470,11 +472,7 @@ def graph_list(request):
         # Return success response:
         return success_response(None, 200, message='The graph was created successfully.')
     else:
-        response_data = {
-            'result': 'error',
-            'message': f'Unknown HTTP method: `{request.method}`.'
-        }
-        return JsonResponse(response_data, status=405)
+        return error_response_http_method_unsupported(request.method)
 
 @login_required
 def graph_detail(request, graph_id):
@@ -491,12 +489,14 @@ def graph_detail(request, graph_id):
         if not request.user.has_perm('api.view_graph'):
             return error_response_no_perms()
         
-        # Get and return the graph:
-        graph = Graph.objects.get(id=graph_id)
-        if graph is not None:
-            return success_response({ 'name': graph.name, 'description': graph.description }, 200)
-        else:
+        # Get the requested graph:
+        try:
+            graph = Graph.objects.get(id=graph_id)
+        except ObjectDoesNotExist:
             return error_response_graph_not_found(graph_id)
+        
+        # Return the graph:
+        return success_response({ 'name': graph.name, 'description': graph.description }, 200)
     elif request.method == 'DELETE':
         """
         The `DELETE` method will delete a single graph.
@@ -506,14 +506,15 @@ def graph_detail(request, graph_id):
         if not request.user.has_perm('api.delete_graph'):
             return error_response_no_perms()
         
-        # Get the graph:
-        graph = Graph.objects.get(id=graph_id)
-        if graph is not None:
-            # The graph exists, delete the graph:
-            graph.delete()
-            return success_response(f'Deleted graph `{graph_id}`.', 200)
-        else:
+        # Get the requested graph:
+        try:
+            graph = Graph.objects.get(id=graph_id)
+        except ObjectDoesNotExist:
             return error_response_graph_not_found(graph_id)
+        
+        # Delete the graph:
+        graph.delete()
+        return success_response(f'Deleted graph `{graph_id}`.', 200)
     elif request.method == 'PUT':
         """
         The `PUT` method updates an entire graph.
@@ -541,15 +542,17 @@ def graph_detail(request, graph_id):
         elif not isinstance(description, str):
             return error_response_invalid_field('description')
         
-        # Get the graph that needs editing:
-        graph = Graph.objects.get(id=graph_id)
-        if graph is not None:
-            graph.name = name.strip()
-            graph.description = description.strip()
-            graph.save()
-            return success_response(None, 200, message=f'Updated graph `{graph_id}`.')
-        else:
+        # Get the requested graph:
+        try:
+            graph = Graph.objects.get(id=graph_id)
+        except ObjectDoesNotExist:
             return error_response_graph_not_found()
+        
+        # Edit the graph:
+        graph.name = name.strip()
+        graph.description = description.strip()
+        graph.save()
+        return success_response(None, 200, message=f'Updated graph `{graph_id}`.')
     else:
         return error_response_http_method_unsupported(request.method)
 
@@ -666,20 +669,22 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         if not request.user.has_perm('api.view_graphdataset'):
             return error_response_no_perms()
         
-        # Get the dataset:
-        dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
-        if dataset == None:
+        # Get the requested dataset:
+        try:
+            dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
+        except ObjectDoesNotExist:
             return error_response_graph_dataset_not_found(dataset_id)
-        else:
-            response_data = {
-                'label': dataset.label,
-                'plot_type': dataset.plot_type,
-                'is_axis': dataset.is_axis,
-                'source_name': dataset.source.name,
-                'source_id': dataset.source.id,
-                'column_id': dataset.column
-            }
-            return success_response(response_data, 200)
+
+        # Return the dataset:
+        response_data = {
+            'label': dataset.label,
+            'plot_type': dataset.plot_type,
+            'is_axis': dataset.is_axis,
+            'source_name': dataset.source.name,
+            'source_id': dataset.source.id,
+            'column_id': dataset.column
+        }
+        return success_response(response_data, 200)
     elif request.method == 'DELETE':
         """
         The `DELETE` method is used to delete a dataset from a graph.
@@ -689,13 +694,15 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         if not request.user.has_perm('api.delete_graphdataset'):
             return error_response_no_perms()
         
-        # Delete the dataset:
-        dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
-        if dataset == None:
+        # Get the requested dataset:
+        try:
+            dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
+        except ObjectDoesNotExist:
             return error_response_graph_dataset_not_found(dataset_id)
-        else:
-            dataset.delete()
-            return success_response(f'Deleted dataset `${dataset_id}`.', 200)
+        
+        # Delete the dataset;
+        dataset.delete()
+        return success_response(f'Deleted dataset `${dataset_id}`.', 200)
     elif request.method == 'PUT':
         """
         The `PUT` method is used to update a dataset.
@@ -738,18 +745,20 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         elif not isinstance(column_id, int):
             return error_response_invalid_field('column_id')
 
-        # Get the dataset:
-        dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
-        if dataset == None:
+        # Get the requested dataset:
+        try:
+            dataset = GraphDataset.objects.get(id=dataset_id, graph=graph_id)
+        except ObjectDoesNotExist:
             return error_response_graph_dataset_not_found(dataset_id)
-        else:
-            dataset.label = label
-            dataset.plot_type = plot_type
-            dataset.is_axis = is_axis
-            dataset.source = Source.objects.get(id=source_id)
-            dataset.column = column_id
-            dataset.save()
-            return success_response(f'Updated dataset `{dataset_id}`.', 200)
+        
+        # Modify the dataset:
+        dataset.label = label
+        dataset.plot_type = plot_type
+        dataset.is_axis = is_axis
+        dataset.source = Source.objects.get(id=source_id)
+        dataset.column = column_id
+        dataset.save()
+        return success_response(f'Updated dataset `{dataset_id}`.', 200)
     else:
         return error_response_http_method_unsupported(request.method)
 
@@ -849,9 +858,7 @@ def graph_data(request, graph_id):
                             }
                         }
                     else:
-                        # The dataset needs plotting:
-                        # TODO: Add CSV data translation here
-                        
+                        # The dataset needs plotting, get the plot type:
                         plot_type = GraphDataset.PlotType(dataset.plot_type)
                         # Construct the dataset JSON object:
                         datasets_json.append({
