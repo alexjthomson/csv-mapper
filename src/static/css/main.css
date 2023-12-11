@@ -127,15 +127,27 @@ body {
     min-width: 150px;
 }
 /* graph */
+.graph-dash {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
 .graph-container {
     position: relative;
     min-height: 300px;
+    flex-grow: 1;
 }
 .graph-container canvas {
     position: absolute;
     top: 0; bottom: 0; left: 0; right: 0;
     width: 100% !important;
     height: 100% !important;
+}
+.graph-controls {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
 }
 /* fade in */
 .fade-in {

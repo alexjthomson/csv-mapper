@@ -31,7 +31,7 @@
     async function updateGraphs() {
         $('#graph-error').hide();
         const response = await queryApi('/api/graph');
-        if (response.status == 'error') {
+        if (response.result == 'error') {
             $('#graph-error').text(`Failed to update graphs: ${response.message}`).hide();
         } else {
             const tableBody = $('#graph-table');
@@ -50,7 +50,7 @@
                                         .addClass('btn btn-primary rounded-pill fw-bold')
                                         .attr('data-bs-toggle', 'modal')
                                         .attr('data-bs-target', '#inspect-graph-modal')
-                                        .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}")`)
+                                        .attr('onclick', `setInspectModalInfo(${entry.id})`)
                                         .text('Inspect')
                                 )
                                 {% endif %}
@@ -80,7 +80,26 @@
             });
         }
     }
-    updateGraphs();
+    $(document).ready(async function() {
+        await updateGraphs();
+        const targetGraph = getUrlParameter('id');
+        if (targetGraph != undefined) {
+            const method = getUrlParameter('method') ?? 'view';
+            switch (method) {
+                case 'view':
+                    $('#inspect-graph-modal').modal('show');
+                    setInspectModalInfo(targetGraph);
+                    break;
+                case 'edit':
+                    $('#edit-graph-modal').modal('show');
+                    setEditModalInfo(targetGraph)
+                    break;
+                default:
+                    console.error(`Unrecognised method: \`${method}\`.`);
+                    break;
+            }
+        }
+    })
 </script>
 {% if perms.api.add_graph %}
 <div id="create-graph-modal" class="modal fade" tabindex="-1" aria-labelledby="create-graph-label" aria-hidden="true">
@@ -142,9 +161,12 @@
     const context = $('#inspect-graph-canvas');
     const chart = new Chart(context, {});
     var updateGraph = false;
-    function setInspectModalInfo(graphId, graphLabel) {
+    async function setInspectModalInfo(graphId) {
         $('#inspect-graph-error').hide();
-        $('#inspect-graph-label').text(graphLabel);
+        const response = await queryApi(`/api/graph/${graphId}/`);
+        if (response.result == 'success') {
+            $('#inspect-graph-label').text(response.data.name);
+        }
         chart.data = {}; chart.options = {}; chart.update();
         updateGraph = true;
         updateInspectModal(graphId, true);

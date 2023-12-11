@@ -35,7 +35,7 @@
         const response = await queryApi('/api/source/');
         const tableBody = $('#source-table');
         tableBody.empty();
-        if (response.status == 'error') {
+        if (response.result == 'error') {
             $('#source-error').text(response.message).show();
         } else {
             $.each(response.data, function(index, entry) {

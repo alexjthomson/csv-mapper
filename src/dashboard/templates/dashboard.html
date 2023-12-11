@@ -4,11 +4,12 @@
     <div id="graph-grid" class="r-grid">
         <div class="r-grid-item p-4 bg-white rounded shadow">
             <h1>Dashboard</h1>
-            <p>The dashboard contains a low-detail live overview of each graph. To view a more detailed view of a graph, simply click the graph to expand it.</p>
+            <p>The dashboard contains a low-detail live overview of each graph.</p>
         </div>
     </div>
 </div>
 {% csrf_token %}
+{% if perms.api.view_graph %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     charts = {};
@@ -32,27 +33,33 @@
                 var graphDiv = $(`#graph_${index}`);
                 const isNew = graphDiv.length == 0;
                 if (isNew) {
-                    const canvas = $('<canvas>').attr('id', `graph_${index}_chart`).hide();
+                    const canvas = $('<canvas>').attr('id', `graph-${index}-chart`).hide();
                     graphDiv = $('<div>')
                         .attr('id', `graph_${index}`)
-                        .addClass('r-grid-item p-4 bg-white rounded shadow fade-in')
+                        .addClass('r-grid-item p-4 bg-white rounded shadow fade-in graph-dash')
                         .append(
-                            $('<h1>').attr('id', `graph_${index}_title`).text('Loading'),
-                            $('<p>').attr('id', `graph_${index}_description`).hide(),
-                            $('<p>').attr('id', `graph_${index}_error`).addClass('text-danger').hide(),
-                            $('<div>').addClass('graph-container').append(canvas)
+                            $('<h1>').attr('id', `graph-${index}-title`).text('Loading'),
+                            $('<p>').attr('id', `graph-${index}-description`).hide(),
+                            $('<p>').attr('id', `graph-${index}-error`).addClass('text-danger').hide(),
+                            $('<div>').addClass('graph-container').append(canvas),
+                            $('<div>').addClass('graph-controls').append(
+                                $('<a>').addClass('btn btn-primary rounded-pill').attr('id', `graph-${index}-view`).attr('href', '/graphs').text('View').hide(),
+                                {% if perms.api.change_graph %}
+                                $('<a>').addClass('btn btn-primary rounded-pill').attr('id', `graph-${index}-edit`).attr('href', '/graphs').text('Edit').hide(),
+                                {% endif %}
+                            )
                         );
                     charts[index] = new Chart(canvas, {})
                     grid.append(graphDiv);
                 }
                 if (graphResponse.result == 'error') {
-                    $(`#graph_${index}_title`).text(`Failed to Load: ${graph.name}`).show();
-                    $(`#graph_${index}_description`).hide();
-                    $(`#graph_${index}_error`).text(graphResponse.message).show();
+                    $(`#graph-${index}-title`).text(`Failed to Load: ${graph.name}`).show();
+                    $(`#graph-${index}-description`).hide();
+                    $(`#graph-${index}-error`).text(graphResponse.message).show();
                 } else {
-                    $(`#graph_${index}_title`).text(graph.name).show();
-                    $(`#graph_${index}_description`).text(graph.description).show();
-                    $(`#graph_${index}_error`).hide();
+                    $(`#graph-${index}-title`).text(graph.name).show();
+                    $(`#graph-${index}-description`).text(graph.description).show();
+                    $(`#graph-${index}-error`).hide();
                     const graphData = graphDataResponse.data;
                     if (graphData != undefined) {
                         const datasetCount = graphData.data.datasets.length;
@@ -70,10 +77,14 @@
                         pluginOptions['legend'] = { display: datasetCount > 1 };
                         pluginOptions['tooltip'] = { enabled: datasetCount > 0 && graphData.data.datasets[0].data.length <= 2500 };
                         chart.options = graphData.options;
-                        $(`#graph_${index}_chart`).show();
+                        $(`#graph-${index}-chart`).show();
                         chart.update();
+                        $(`#graph-${index}-view`).attr('href', `/graphs?id=${graph.id}&method=view`).show();
+                        {% if perms.api.change_graph %}
+                        $(`#graph-${index}-edit`).attr('href', `/graphs?id=${graph.id}&method=edit`).show();
+                        {% endif %}
                     } else {
-                        $(`#graph_${index}_error`).text("Failed to load.").show();
+                        $(`#graph-${index}-error`).text("Failed to load.").show();
                     }
                 }
             });
@@ -83,4 +94,5 @@
     updateGrid()
     setInterval(updateGrid, 20000);
 </script>
+{% endif %}
 {% endblock %}

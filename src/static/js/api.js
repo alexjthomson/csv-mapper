@@ -39,3 +39,13 @@ function formToJson($form) {
     });
     return json;
 }
+function getUrlParameter(param) {
+    var url = window.location.search.substring(1), urlQuery = url.split('&'), paramName, i;
+    for (i = 0; i < urlQuery.length; i++) {
+        paramName = urlQuery[i].split('=');
+        if (paramName[0] === param) {
+            return paramName[1] === undefined ? true : decodeURIComponent(paramName[1]);
+        }
+    }
+    return undefined;
+};
