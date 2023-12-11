@@ -29,14 +29,13 @@ async function queryApi(endpoint, method='GET', body=null) {
         }
     }
 }
-function formToJson(form) {
-    const data = form.serializeArray();
-    console.log(data);
+function formToJson($form) {
     json = {};
-    $.each(data, function(_index, field) {
-        var value = field.value;
-        if (value == 'on') { value = true; } else if (value == 'off') { value = false; }
-        json[field.name] = value;
+    $form.find('.form-control').each(function () {
+        json[this.name] = this.value;
+    });
+    $form.find('.form-check-input').each(function () {
+        json[this.name] = this.checked;
     });
     return json;
 }

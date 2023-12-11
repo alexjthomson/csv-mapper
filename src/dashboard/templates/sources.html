@@ -50,38 +50,32 @@
                                 .prop('checked', entry.has_header)
                         ),
                         $('<td>').addClass('fit').append(
-                            $('<div>')
-                                .addClass('table-action-buttons')
+                            $('<div>').addClass('table-action-buttons').append(
                                 {% if perms.api.view_source %}
-                                .append(
-                                    $('<button>')
-                                        .addClass('btn btn-primary rounded-pill fw-bold')
-                                        .attr('data-bs-toggle', 'modal')
-                                        .attr('data-bs-target', '#inspect-source-modal')
-                                        .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}", "${entry.location}")`)
-                                        .text('Inspect')
-                                )
+                                $('<button>')
+                                    .addClass('btn btn-primary rounded-pill fw-bold')
+                                    .attr('data-bs-toggle', 'modal')
+                                    .attr('data-bs-target', '#inspect-source-modal')
+                                    .attr('onclick', `setInspectModalInfo(${entry.id}, "${entry.name}", "${entry.location}")`)
+                                    .text('Inspect'),
                                 {% endif %}
                                 {% if perms.api.change_source %}
-                                .append(
-                                    $('<button>')
-                                        .addClass('btn btn-primary rounded-pill fw-bold')
-                                        .attr('data-bs-toggle', 'modal')
-                                        .attr('data-bs-target', '#edit-source-modal')
-                                        .attr('onclick', `setEditModalInfo(${entry.id})`)
-                                        .text('Edit')
-                                        )
-                                        {% endif %}
-                                        {% if perms.api.delete_source %}
-                                        .append(
-                                    $('<button>')
-                                        .addClass('btn btn-danger rounded-pill fw-bold')
-                                        .attr('data-bs-toggle', 'modal')
-                                        .attr('data-bs-target', '#delete-source-modal')
-                                        .attr('onclick', `setDeleteModalInfo(${entry.id}, "${entry.name}")`)
-                                        .text('Delete')
-                                )
+                                $('<button>')
+                                    .addClass('btn btn-primary rounded-pill fw-bold')
+                                    .attr('data-bs-toggle', 'modal')
+                                    .attr('data-bs-target', '#edit-source-modal')
+                                    .attr('onclick', `setEditModalInfo(${entry.id})`)
+                                    .text('Edit'),
                                 {% endif %}
+                                {% if perms.api.delete_source %}
+                                $('<button>')
+                                    .addClass('btn btn-danger rounded-pill fw-bold')
+                                    .attr('data-bs-toggle', 'modal')
+                                    .attr('data-bs-target', '#delete-source-modal')
+                                    .attr('onclick', `setDeleteModalInfo(${entry.id}, "${entry.name}")`)
+                                    .text('Delete'),
+                                {% endif %}
+                            )
                         )
                     )
                 );
@@ -124,13 +118,7 @@
 <script>
     async function submitCreateSourceForm() {
         $('#source-error').hide();
-        const formData = $('#create-source-form').serializeArray();
-        formDataJson = {};
-        $.each(formData, function(index, field) {
-            formDataJson[field.name] = field.value;
-        });
-        formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-        const response = await queryApi('/api/source/', method='POST', body= JSON.stringify(formDataJson));
+        const response = await queryApi('/api/source/', method='POST', body=formToJson($('#create-source-form')));
         if (response.result == 'error') {
             $('#source-error').text(response.message).show();
         } else {
@@ -186,16 +174,10 @@
             $.each(columns, function(index, column) {
                 if (column.unit != null) {
                     tableHeadRow.append(
-                        $('<th>').append(
-                            $('<span>').text(column.name)
-                        ).append(
-                            $('<span>').addClass("text-secondary").text(` (${column.unit})`)
-                        )
+                        $('<th>').append($('<span>').text(column.name), $('<span>').addClass("text-secondary").text(` (${column.unit})`))
                     );
                 } else {
-                    tableHeadRow.append(
-                        $('<th>').text(column.name)
-                    );
+                    tableHeadRow.append($('<th>').text(column.name));
                 }
                 if (rowCount == -1) {
                     rowCount = column.data.length;
@@ -254,8 +236,7 @@
         $('#edit-source-submit-button').attr('onclick', `submitEditSourceForm(${source_id})`);
         const response = await queryApi(`/api/source/${source_id}/`);
         if (response.result != 'success') {
-            $('#edit-source-error').text(response.message);
-            $('#edit-source-error').show();
+            $('#edit-source-error').text(response.message).show();
         } else {
             const source = response.data;
             $('#edit-source-name').val(source.name);
@@ -265,16 +246,9 @@
     }
     async function submitEditSourceForm(source_id) {
         $('#edit-source-error').hide();
-        const formData = $('#edit-source-form').serializeArray();
-        formDataJson = {};
-        $.each(formData, function(index, field) {
-            formDataJson[field.name] = field.value;
-        });
-        formDataJson['has_header'] = formDataJson['has_header'] == 'on'
-        const response = await queryApi(`/api/source/${source_id}/`, method = 'PUT', body = JSON.stringify(formDataJson));
+        const response = await queryApi(`/api/source/${source_id}/`, method='PUT', body=formToJson($('#edit-source-form')));
         if (response.result != 'success') {
-            $('#edit-source-error').text(response.message);
-            $('#edit-source-error').show();
+            $('#edit-source-error').text(response.message).show();
         } else {
             await updateSources();
             $('#edit-source-modal').modal('hide');
@@ -310,7 +284,7 @@
         $('#source-error').hide();
         const formData = $('#delete-source-form').serializeArray();
         const sourceId = formData[0].value;
-        const response = await queryApi(`/api/source/${sourceId}/`, method = 'DELETE');
+        const response = await queryApi(`/api/source/${sourceId}/`, method='DELETE');
         if (response.result == 'error') {
             $('#source-error').text(response.message).show();
         } else {
