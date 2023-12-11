@@ -194,11 +194,11 @@
                     <p id="edit-graph-success" class="text-success mt-2" style="display: none;"></p>
                 </form>
                 <hr />
-                {% if perms.api.view_graph_dataset %}
+                {% if perms.api.view_graphdataset %}
                 <div class="row">
                     <div class="col">
                         <h5>Datasets</h5>
-                        <p>View{% if perms.api.change_graph_dataset or perms.api.add_graph_dataset or perms.api.delete_graph_dataset %} and manage{% endif %} graph datasets</p>
+                        <p>View{% if perms.api.change_graphdataset or perms.api.add_graphdataset or perms.api.delete_graphdataset %} and manage{% endif %} graph datasets</p>
                         <div class="table-responsive" style="max-height: 800px">
                             <table class="table">
                                 <thead>
@@ -211,7 +211,7 @@
                             </table>
                         </div>
                     </div>
-                    {% if perms.api.change_graph_dataset or perms.api.add_graph_dataset %}
+                    {% if perms.api.change_graphdataset or perms.api.add_graphdataset %}
                     <div class="col">
                         <form id="edit-graph-datasets">
                             <div class="mb-3">
@@ -388,7 +388,7 @@
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
         {% if perms.api.view_source %}
         const selectedSource = $('#edit-graph-dataset-source').find(":selected").val();
-        const response = await queryApi(`/api/source/${selectedSource}/data`);
+        const response = await queryApi(`/api/source/${selectedSource}/data/`);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
