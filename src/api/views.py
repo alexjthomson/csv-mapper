@@ -15,8 +15,6 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 from urllib.error import URLError
 
-import logging
-
 ALLOWED_CSV_CHARSET='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\({)}[]+<>,!?£$%^&* '
 
 def clean_csv_value(value):
