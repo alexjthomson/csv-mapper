@@ -23,5 +23,6 @@ jobs:
       - name: Run tests
         working-directory: ./src
         env:
+          DJANGO_LOG_DIRECTORY: ./logs
           MYSQL_PASSWORD_FILE: ../.secrets/password_file
         run: python manage.py test
