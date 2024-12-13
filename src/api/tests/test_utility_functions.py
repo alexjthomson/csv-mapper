@@ -14,12 +14,16 @@ class UtilityFunctionTests(TestCase):
     def test_clean_csv_value(self):
         # Test cleaning a CSV value with allowed and disallowed characters:
         self.assertEqual(
-            clean_csv_value("hello123_-./\\({)}[]+<>,!?£$%^&* "),
-            "hello123_-./\\({)}[]+<>,!?£$%^&* "
+            clean_csv_value("hello123_-./\\({)}[]+<>,!?£$%^&*"),
+            "hello123_-./\\({)}[]+<>,!?£$%^&*"
         )
         self.assertEqual(
             clean_csv_value("This contains no disallowed characters`:;\"'@#~=¬|"),
             "This contains no disallowed characters"
+        )
+        self.assertEqual(
+            clean_csv_value("     Leading and trailing white-space has been stripped    "),
+            "Leading and trailing white-space has been stripped"
         )
 
     def test_success_response(self):
