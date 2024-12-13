@@ -288,7 +288,7 @@ def source_detail(request, source_id):
         
         # Delete the source:
         source.delete()
-        return success_response(f'Deleted source `{source_id}`.', 200)
+        return success_response(None, 200, message=f'Deleted source `{source_id}`.')
     elif request.method == 'PUT':
         """
         The `PUT` method updates an entire source. In simple terms, this will
