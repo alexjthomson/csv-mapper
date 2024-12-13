@@ -12,9 +12,15 @@ from api.views import (
 class UtilityFunctionTests(TestCase):
 
     def test_clean_csv_value(self):
-        # Test cleaning a CSV value with allowed and disallowed characters
-        result = clean_csv_value("hello123!@#$%^&*(){}<>[]|~`")
-        self.assertEqual(result, "hello123!@#$%^&*{}<>[]")
+        # Test cleaning a CSV value with allowed and disallowed characters:
+        self.assertEqual(
+            clean_csv_value("hello123_-./\\({)}[]+<>,!?£$%^&* "),
+            "hello123_-./\\({)}[]+<>,!?£$%^&* "
+        )
+        self.assertEqual(
+            clean_csv_value("This contains no disallowed characters`:;\"'@#~=¬|"),
+            "This contains no disallowed characters"
+        )
 
     def test_success_response(self):
         response = success_response({"key": "value"}, 200, "Success message")
