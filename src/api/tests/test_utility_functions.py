@@ -35,7 +35,7 @@ class UtilityFunctionTests(TestCase):
             "message": "An error occurred.",
         })
 
-    @patch("your_app_name.views.urlopen")
+    @patch("api.views.urlopen")
     def test_read_source_at_http(self, mock_urlopen):
         # Mock a successful HTTP source read
         mock_urlopen.return_value.__enter__.return_value.read.return_value = b"col1,col2\nval1,val2"
