@@ -18,11 +18,13 @@ jobs:
           pip install -r docker/django/requirements.txt
       - name: Create mock filesystem
         run: |
-          mkdir -p ./src/logs ./.secrets/
-          echo "mockpassword" > ./.secrets/password_file
+          mkdir -p ./src/logs
       - name: Run tests
         working-directory: ./src
         env:
           DJANGO_LOG_DIRECTORY: ./logs
-          MYSQL_PASSWORD_FILE: ../.secrets/password_file
+          DJANGO_LOG_LEVEL: WARNING
+          DJANGO_ENVIRONMENT: DEVELOPMENT
+          MYSQL_MAIN_DATABASE: main
+          MYSQL_GRAPH_DATABASE: graph
         run: python manage.py test

@@ -1,16 +1,36 @@
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 import os
+import sys
+import tempfile
+import logging
+
+logger = logging.getLogger(__name__)
 
 def db_config(database_name):
     """
     Creates a database configuration entry for Django.
+
+    This function will automatically detect if the application is being tested,
+    and use a new testing database instead of an actual database.
 
     Arguments:
     - database_name (str): Name of the MySQL database that the configuration
       should apply to.
     """
     
+    # Check if the application is being tested:
+    if 'test' in sys.argv:
+        # Tests are being ran on the application; therefore, we should use a
+        # temporary empty testing database since the application is capable of
+        # configuring new databases manually:
+        logger.warning("Application is being ran in test mode. A temporary SQLite database will be used.");
+        temp_db = os.path.join(tempfile.gettempdir(), f"{database_name}_test.sqlite3")
+        return {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': temp_db
+        }
+
     return {
         'ENGINE': 'django.db.backends.mysql',
         'HOST': os.getenv('MYSQL_HOST'),
