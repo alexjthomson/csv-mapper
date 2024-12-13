@@ -101,18 +101,18 @@ class ViewFunctionTests(TestCase):
         self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
 
     def test_source_list_get_no_perms(self):
-        response = self.client.get("/api/source-list/")
+        response = self.client.get("/api/source/")
         self.assertEqual(response.status_code, 403)  # Expecting 403 for unauthorized access
 
     def test_source_list_get_with_perms(self):
         self.client.login(username='permuser', password='password')  # Log in the user with permissions
         Source.objects.create(name="Source1", location="http://example.com", has_header=True)
-        response = self.client.get('/api/source-list/')  # Use the actual URL of the endpoint
+        response = self.client.get('/api/source/')  # Use the actual URL of the endpoint
         self.assertEqual(response.status_code, 200)
 
     def test_source_detail_get(self):
         source = Source.objects.create(name="Source1", location="http://example.com", has_header=True)
-        request = self.factory.get(f'/api/sources/{source.id}/')
+        request = self.factory.get(f'/api/source/{source.id}/')
         request.user = self.user_with_perms
         response = source_detail(request, source.id)
         self.assertEqual(response.status_code, 200)
@@ -121,7 +121,7 @@ class ViewFunctionTests(TestCase):
 
     def test_source_detail_delete(self):
         source = Source.objects.create(name="Source1", location="http://example.com", has_header=True)
-        request = self.factory.delete(f'/api/sources/{source.id}/')
+        request = self.factory.delete(f'/api/source/{source.id}/')
         request.user = self.user_with_perms
         response = source_detail(request, source.id)
         self.assertEqual(response.status_code, 200)
