@@ -15,15 +15,24 @@ from api.views import (
     source_detail,
 )
 from api.models import Source
-from django.contrib.auth.models import AnonymousUser, User
-
+from django.contrib.auth.models import AnonymousUser, Group, User
 
 class ViewFunctionTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
+        # Create the required 'default' group
+        self.default_group = Group.objects.create(name='default')
+        
+        # Create test users
         self.user = User.objects.create_user(username='testuser', password='password')
         self.user_with_perms = User.objects.create_user(username='permuser', password='password')
-        self.user_with_perms.user_permissions.set(['api.view_source', 'api.add_source', 'api.delete_source'])
+        
+        # Assign permissions to the user with permissions
+        self.user_with_perms.user_permissions.set([
+            'api.view_source',
+            'api.add_source',
+            'api.delete_source'
+        ])
 
     def test_error_response_no_perms(self):
         response = error_response_no_perms()
