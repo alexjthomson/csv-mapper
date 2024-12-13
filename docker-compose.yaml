@@ -1,5 +1,4 @@
 ---
-version: "3.8"
 name:    "csv"
 services:
   django:
@@ -32,7 +31,7 @@ services:
   mysql:
     container_name: "csv_mysql"
     hostname: "mysql"
-    image: "mysql:latest"
+    image: "mysql:8.2.0"
     restart: "unless-stopped"
     privileged: false
     user: "1000:1000"
