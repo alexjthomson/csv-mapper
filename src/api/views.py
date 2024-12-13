@@ -19,8 +19,22 @@ ALLOWED_CSV_CHARSET='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456
 
 def clean_csv_value(value):
     """
-    Cleans a CSV entry.
+    Cleans a CSV entry by retaining only allowed characters and trimming any
+    leading or trailing whitespace.
+    
+    Arguments:
+    - value (any): The input value to clean.
+    
+    Returns:
+    str: The cleaned value as a string.
     """
+    
+    # Validate the value is a valid string:
+    if value is None:
+        return ''
+    value = str(value)
+    
+    # Remove disallowed characters and trim whitespace:
     return ''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip()
 
 def success_response(data, status, message=None):

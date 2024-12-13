@@ -25,6 +25,18 @@ class UtilityFunctionTests(TestCase):
             clean_csv_value("     Leading and trailing white-space has been stripped    "),
             "Leading and trailing white-space has been stripped"
         )
+        self.assertEqual(
+            clean_csv_value("`:;\"'@#~=¬|"),
+            ""
+        )
+        self.assertEqual(
+            clean_csv_value(None),
+            ""
+        )
+        self.assertEqual(
+            clean_csv_value(""),
+            ""
+        )
 
     def test_success_response(self):
         response = success_response({"key": "value"}, 200, "Success message")
