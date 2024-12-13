@@ -15,6 +15,7 @@ services:
     secrets:
       - "mysql_django_password"
     environment:
+      - "DJANGO_ENVIRONMENT=DEVELOPMENT"
       - "DJANGO_LOG_LEVEL=WARNING"
       - "MYSQL_HOST=mysql"
       - "MYSQL_PORT=3306"
