@@ -101,6 +101,7 @@ class ViewFunctionTests(TestCase):
         self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
 
     def test_source_list_get_no_perms(self):
+        self.client.login(username='testuser', password='password')
         response = self.client.get("/api/source/")
         self.assertEqual(response.status_code, 403)  # Expecting 403 for unauthorized access
 
