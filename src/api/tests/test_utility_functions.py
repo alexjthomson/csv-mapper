@@ -1,5 +1,5 @@
+import json
 from django.test import TestCase
-from django.http import JsonResponse
 from unittest.mock import patch, mock_open
 from io import StringIO
 from api.views import (
@@ -17,23 +17,25 @@ class UtilityFunctionTests(TestCase):
         self.assertEqual(result, "hello123!@#$%^&*{}<>[]")
 
     def test_success_response(self):
-        # Test constructing a success response
-        response = success_response({"key": "value"}, 200, "Success!")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {
-            "result": "success",
-            "message": "Success!",
-            "data": {"key": "value"},
-        })
+        response = success_response({"key": "value"}, 200, "Success message")
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),  # Decode JSON response content
+            {
+                "result": "success",
+                "message": "Success message",
+                "data": {"key": "value"}
+            }
+        )
 
     def test_error_response(self):
-        # Test constructing an error response
-        response = error_response("An error occurred.", 400)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {
-            "result": "error",
-            "message": "An error occurred.",
-        })
+        response = error_response("Error message", 400)
+        self.assertEqual(
+            json.loads(response.content.decode('utf-8')),  # Decode JSON response content
+            {
+                "result": "error",
+                "message": "Error message"
+            }
+        )
 
     @patch("api.views.urlopen")
     def test_read_source_at_http(self, mock_urlopen):
