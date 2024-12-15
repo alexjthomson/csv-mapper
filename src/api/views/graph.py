@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
@@ -18,10 +17,6 @@ class GraphListView(APIView):
 
     The main use of this endpoint is to either get a list of each of the graphs
     that exist with some information about the graph, or to create a new graph.
-
-    Supported HTTP methods:
-    - GET: Gets a list of every graph.
-    - POST: Creates a new graph.
     """
     
     permission_classes = [IsAuthenticated]

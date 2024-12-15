@@ -1,5 +1,8 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.decorators import login_required
 
 from api.models import Source
 from api.views.response import *
@@ -8,21 +11,19 @@ from api.views.utility import clean_csv_value, read_source_at
 import csv
 import json
 
-@login_required
-def source_list(request):
+class SourceListView(APIView):
     """
     RESTful API endpoint for interacting with many sources.
 
     The main use of this endpoint is to either get a list of each of the
     sources, or to create a new source.
-
-    Supported HTTP methods:
-    - GET: Gets a list of every source.
-    - POST: Creates a new source.
     """
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
         """
-        The `GET` method retrieves a list of every source.
+        Retrieves a list of every source.
         """
 
         # Check permissions:
@@ -48,9 +49,10 @@ def source_list(request):
 
         # Construct and return the response data:
         return success_response(sources_json, 200)
-    elif request.method == 'POST':
+    
+    def post(self, request):
         """
-        The `POST` method will create a new source.
+        Creates a new source.
         """
 
         # Check permissions:
@@ -90,18 +92,17 @@ def source_list(request):
 
         # Return the success response:
         return success_response(None, 200, message='The source was created successfully.')
-    else:
-        return error_response_http_method_unsupported(request.method)
 
-@login_required
-def source_detail(request, source_id):
+class SourceDetailView(APIView):
     """
     RESTful API endpoint for interacting with a single source.
     """
-
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, source_id):
         """
-        The `GET` method will fetch a single source.
+        Fetches a single source.
 
         If the resource is not found, a 404 response code is returned.
 
@@ -119,9 +120,10 @@ def source_detail(request, source_id):
         except ObjectDoesNotExist:
             return error_response_source_not_found(source_id)
         return success_response({ 'name': source.name, 'location': source.location, 'has_header': source.has_header }, 200)
-    elif request.method == 'DELETE':
+    
+    def delete(self, request, source_id):
         """
-        The `DELETE` method will delete a single source.
+        Deletes a single source.
 
         If the resource is deleted successfully, a 200 response code is
         returned; otherwise, if the resource is not found, 404 is returned.
@@ -143,10 +145,11 @@ def source_detail(request, source_id):
         # Delete the source:
         source.delete()
         return success_response(None, 200, message=f'Deleted source `{source_id}`.')
-    elif request.method == 'PUT':
+    
+    def put(self, request, source_id):
         """
-        The `PUT` method updates an entire source. In simple terms, this will
-        replace the source data at an index with new data.
+        Updates an entire source. In simple terms, this will replace the source
+        data at an index with new data.
 
         If the resource is modified successfully, a 200 response code is
         returned; otherwise, if the resource is not found, 404 is returned.
@@ -194,15 +197,15 @@ def source_detail(request, source_id):
         source.has_header = has_header
         source.save()
         return success_response(None, 200, message=f'Updated source `{source_id}`.')
-    else:
-        return error_response_http_method_unsupported(request.method)
 
-@login_required
-def source_data(request, source_id):
+class SourceDataView(APIView):
     """
     This API end-point is used to fetch the actual data behind a CSV source.
     """
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, source_id):
         # Check permissions:
         if not request.user.has_perm('api.view_source'):
             return error_response_no_perms()
@@ -232,25 +235,16 @@ def source_data(request, source_id):
         if column_count == 0:
             return error_response('CSV source has zero columns.', 406)
 
-        # Construct `columns`:
-        columns = []
-        # Pre-populate the header values:
-        if source.has_header:
-            for column in current_row:
-                columns.append({
-                    'name': clean_csv_value(column),
-                    'unit': None,
-                    'transform': None,
-                    'data': []
-                })
-        else:
-            for i in range(column_count):
-                columns.append({
-                    'name': None,
-                    'unit': None,
-                    'transform': None,
-                    'data': []
-                })
+        # Construct `columns` with pre-populated headers:
+        columns = [
+            {
+                'name': clean_csv_value(column) if source.has_header else None,
+                'unit': None,
+                'transform': None,
+                'data': []
+            }
+            for column in (current_row if source.has_header else range(column_count))
+        ]
         
         # Collect the CSV rows:
         if source.has_header:
@@ -265,5 +259,3 @@ def source_data(request, source_id):
         
         # Return the CSV data as JSON:
         return success_response(columns, 200)
-    else:
-        return error_response_http_method_unsupported(request.method)
