@@ -92,7 +92,7 @@ class GraphDetailViewTests(TestCase):
             payload,
             content_type='application/json'
         )
-        print(response)
+        print(response.json())
         self.assertEqual(response.status_code, 200)
         self.graph.refresh_from_db()
         self.assertEqual(self.graph.name, "Updated Graph")
