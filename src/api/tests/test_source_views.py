@@ -1,11 +1,12 @@
-import json
-from django.test import TestCase, RequestFactory
-from api.views.source import *
-from api.models import Source
-from django.contrib.auth.models import Group, Permission, User
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.test import RequestFactory
+from rest_framework.test import APIClient, APITestCase
+from unittest.mock import patch, MagicMock
+from api.models import Source
+from api.views.source import *
 
-class SourceListViewTests(TestCase):
+class SourceListViewTests(APITestCase):
     databases = {'default', 'graph'}
     
     def setUp(self):
@@ -22,12 +23,15 @@ class SourceListViewTests(TestCase):
         permissions = [
             'view_source',
             'add_source',
-            'delete_source',
         ]
         content_type = ContentType.objects.get(app_label='api', model='source')
         for codename in permissions:
             permission = Permission.objects.get(codename=codename, content_type=content_type)
             self.user_with_perms.user_permissions.add(permission)
+
+        # APIClient setup
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user_with_perms)
     
     def test_get_sources_success(self):
         Source.objects.create(name="Source 1", location="path/to/source1.csv", has_header=True)
@@ -59,7 +63,7 @@ class SourceListViewTests(TestCase):
         }, format='json')
         self.assertEqual(response.status_code, 400)
 
-class SourceDetailViewTests(TestCase):
+class SourceDetailViewTests(APITestCase):
     databases = {'default', 'graph'}
     
     def setUp(self):
@@ -75,13 +79,20 @@ class SourceDetailViewTests(TestCase):
         # Assign permissions to the user with permissions
         permissions = [
             'view_source',
-            'add_source',
+            'change_source',
             'delete_source',
         ]
         content_type = ContentType.objects.get(app_label='api', model='source')
         for codename in permissions:
             permission = Permission.objects.get(codename=codename, content_type=content_type)
             self.user_with_perms.user_permissions.add(permission)
+
+        # APIClient setup
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user_with_perms)
+
+        # Create a source for testing
+        self.source = Source.objects.create(name="Source 1", location="path/to/source.csv", has_header=True)
     
     def test_get_source_success(self):
         response = self.client.get(f'/api/v1/sources/{self.source.id}/')
@@ -120,7 +131,7 @@ class SourceDetailViewTests(TestCase):
         }, format='json')
         self.assertEqual(response.status_code, 400)
 
-class SourceDataViewTests(TestCase):
+class SourceDataViewTests(APITestCase):
     databases = {'default', 'graph'}
     
     def setUp(self):
@@ -136,13 +147,18 @@ class SourceDataViewTests(TestCase):
         # Assign permissions to the user with permissions
         permissions = [
             'view_source',
-            'add_source',
-            'delete_source',
         ]
         content_type = ContentType.objects.get(app_label='api', model='source')
         for codename in permissions:
             permission = Permission.objects.get(codename=codename, content_type=content_type)
             self.user_with_perms.user_permissions.add(permission)
+
+        # APIClient setup
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user_with_perms)
+
+        # Create a source for testing
+        self.source = Source.objects.create(name="Source 1", location="path/to/source.csv", has_header=True)
     
     @patch('api.views.read_source_at')
     def test_get_source_data_success(self, mock_read_source_at):
