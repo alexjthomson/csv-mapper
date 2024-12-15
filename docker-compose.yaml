@@ -3,7 +3,7 @@ name: "csv"
 services:
   django:
     container_name: "csv_django"
-    image: "ghcr.io/alexjthomson/csv-mapper"
+    image: "ghcr.io/alexjthomson/csv-mapper:latest"
     restart: "unless-stopped"
     privileged: false
     user: "1000:1000"
