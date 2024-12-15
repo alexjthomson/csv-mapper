@@ -1,5 +1,5 @@
 ---
-name:    "csv"
+name: "csv"
 services:
   django:
     container_name: "csv_django"
@@ -13,9 +13,11 @@ services:
       mysql:
         condition: "service_healthy"
     secrets:
+      - "django_secret_key"
       - "mysql_django_password"
     environment:
       - "DJANGO_ENVIRONMENT=DEVELOPMENT"
+      - "DJANGO_SECRET_KEY_FILE=/run/secrets/django_secret_key"
       - "DJANGO_LOG_LEVEL=WARNING"
       - "MYSQL_HOST=mysql"
       - "MYSQL_PORT=3306"
@@ -26,7 +28,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - "django_data:/data:ro"
       - "django_src:/code"
       - "django_log:/log"
   mysql:
@@ -54,17 +55,13 @@ services:
     volumes:
       - "mysql_data:/var/lib/mysql"
 secrets:
+  django_secret_key:
+    file: "./.secrets/django_secret_key"
   mysql_root_password:
     file: "./.secrets/mysql_root_password"
   mysql_django_password:
     file: "./.secrets/mysql_django_password"
 volumes:
-  django_data:
-    driver: "local"
-    driver_opts:
-      type: "none"
-      o: "bind"
-      device: "./data/django"
   django_src:
     driver: "local"
     driver_opts:
