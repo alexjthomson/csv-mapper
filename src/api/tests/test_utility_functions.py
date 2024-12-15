@@ -1,12 +1,13 @@
 import json
 from django.test import TestCase
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, Mock
 from api.views import (
     clean_csv_value,
     success_response,
     error_response,
     read_source_at,
 )
+from io import StringIO
 
 class UtilityFunctionTests(TestCase):
     def test_clean_csv_value(self):
@@ -57,11 +58,21 @@ class UtilityFunctionTests(TestCase):
             }
         )
             
-    @patch("api.views.utility.urlopen")
-    def test_read_source_at_http(self, mock_urlopen):
-        mock_urlopen.return_value.__enter__.return_value.read.return_value = b"col1,col2\nval1,val2"
+    @patch("api.views.utility.requests.get")
+    def test_read_source_at_http(self, mock_get):
+        # Mock response from `requests.get`:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {'Content-Type': 'text/csv'}
+        mock_response.text = "col1,col2\nval1,val2"
+        mock_get.return_value = mock_response
+
+        # Call the function:
         success, csv_file = read_source_at("http://example.com/source.csv")
+
+        # Assertions:
         self.assertTrue(success)
+        self.assertIsInstance(csv_file, StringIO)
         self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
 
     def test_read_source_at_invalid_url(self):
