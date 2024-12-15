@@ -82,7 +82,11 @@ class GraphDetailViewTests(TestCase):
         self.assertEqual(response.json()['data']['name'], "Graph 1")
 
     def test_update_graph_success(self):
-        payload = {"name": "Updated Graph", "description": "Updated Description"}
+        payload = {
+            "name": "Updated Graph",
+            "location": "http://example.com/updated_location",
+            "has_header": True
+        }
         response = self.client.put(
             f'/api/graph/{self.graph.id}/',
             payload,
