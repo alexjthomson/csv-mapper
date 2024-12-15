@@ -1,5 +1,9 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.decorators import login_required
 
 from api.models import Source, Graph, GraphDataset
 from api.views.response import *
@@ -8,8 +12,7 @@ from api.views.utility import read_source_at
 import csv
 import json
 
-@login_required
-def graph_list(request):
+class GraphListView(APIView):
     """
     RESTful API endpoint for interacting with many graphs.
 
@@ -20,9 +23,12 @@ def graph_list(request):
     - GET: Gets a list of every graph.
     - POST: Creates a new graph.
     """
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
         """
-        The `GET` method retrieves a list of every graph.
+        Retrieves a list of every graph.
         """
 
         # Check permissions:
@@ -45,9 +51,10 @@ def graph_list(request):
         
         # Return the graph JSON data:
         return success_response(graph_json, 200)
-    elif request.method == 'POST':
+    
+    def post(self, request):
         """
-        The `POST` method will create a new graph.
+        Creates a new graph.
         """
         
         # Check permissions:
@@ -83,18 +90,17 @@ def graph_list(request):
         
         # Return success response:
         return success_response(None, 200, message='The graph was created successfully.')
-    else:
-        return error_response_http_method_unsupported(request.method)
 
-@login_required
-def graph_detail(request, graph_id):
+class GraphDetailView(APIView):
     """
     RESTful API endpoint for interacting with a single graph.
     """
-
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, graph_id):
         """
-        The `GET` method will fetch data for a single graph.
+        Fetches data for a single graph.
         """
         
         # Check permissions:
@@ -109,9 +115,10 @@ def graph_detail(request, graph_id):
         
         # Return the graph:
         return success_response({ 'name': graph.name, 'description': graph.description }, 200)
-    elif request.method == 'DELETE':
+    
+    def delete(self, request, graph_id):
         """
-        The `DELETE` method will delete a single graph.
+        Deletes a single graph.
         """
 
         # Check permissions:
@@ -127,9 +134,10 @@ def graph_detail(request, graph_id):
         # Delete the graph:
         graph.delete()
         return success_response(f'Deleted graph `{graph_id}`.', 200)
-    elif request.method == 'PUT':
+    
+    def put(self, request, graph_id):
         """
-        The `PUT` method updates an entire graph.
+        Updates an entire graph.
         """
 
         # Check permissions:
@@ -165,19 +173,18 @@ def graph_detail(request, graph_id):
         graph.description = description.strip()
         graph.save()
         return success_response(None, 200, message=f'Updated graph `{graph_id}`.')
-    else:
-        return error_response_http_method_unsupported(request.method)
 
-@login_required
-def graph_dataset_list(request, graph_id):
+class GraphDatasetListView(APIView):
     """
     RESTful API endpoint for interacting with the datasets that belong to a
     graph.
     """
-
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, graph_id):
         """
-        The `GET` method is used to get every dataset that belongs to a graph.
+        Gets every dataset that belongs to a graph.
         """
 
         # Check permissions:
@@ -204,9 +211,10 @@ def graph_dataset_list(request, graph_id):
         
         # Construct and return the response data:
         return success_response(datasets_json, 200)
-    elif request.method == 'POST':
+    
+    def post(self, request, graph_id):
         """
-        The `POST` method is used to create a new dataset for a graph.
+        Creates a new dataset for a graph.
         """
 
         # Check permissions:
@@ -262,19 +270,17 @@ def graph_dataset_list(request, graph_id):
         except Exception:
             return error_response('Failed to create dataset.', 500)
         return success_response('Created dataset.', 200)
-    else:
-        return error_response_http_method_unsupported(request.method)
 
-@login_required
-def graph_dataset_detail(request, graph_id, dataset_id):
+class GraphDatasetDetailView(APIView):
     """
     RESTful API endpoint for interacting with a single datasets.
     """
-
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, graph_id, dataset_id):
         """
-        The `GET` method is used to get information about a dataset that belongs
-        to the specified graph.
+        Gets information about a dataset that belongs to the specified graph.
         """
 
         # Check permissions:
@@ -297,9 +303,10 @@ def graph_dataset_detail(request, graph_id, dataset_id):
             'column_id': dataset.column
         }
         return success_response(response_data, 200)
-    elif request.method == 'DELETE':
+
+    def delete(self, request, graph_id, dataset_id):
         """
-        The `DELETE` method is used to delete a dataset from a graph.
+        Deletes a dataset from a graph.
         """
 
         # Check permissions:
@@ -315,7 +322,8 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         # Delete the dataset;
         dataset.delete()
         return success_response(f'Deleted dataset `${dataset_id}`.', 200)
-    elif request.method == 'PUT':
+    
+    def put(self, request, graph_id, dataset_id):
         """
         The `PUT` method is used to update a dataset.
         """
@@ -371,19 +379,19 @@ def graph_dataset_detail(request, graph_id, dataset_id):
         dataset.column = column_id
         dataset.save()
         return success_response(f'Updated dataset `{dataset_id}`.', 200)
-    else:
-        return error_response_http_method_unsupported(request.method)
 
-@login_required
-def graph_data(request, graph_id):
+class GraphDataView(APIView):
     """
     RESTful API endpoint for fetching graph data for ChartJs.
     """
-    if request.method == 'GET':
+    
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, graph_id):
         """
-        The `GET` method is used to fetch ChartJs data for the graph.
+        Fetches the ChartJs data for the graph.
         """
-
+        
         # Check permissions:
         if not request.user.has_perm('api.view_graph'):
             return error_response_no_perms()
@@ -493,5 +501,3 @@ def graph_data(request, graph_id):
             'data': data_json,
             'options': options_json,
         }, 200)
-    else:
-        return error_response_http_method_unsupported(request.method)

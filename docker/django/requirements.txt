@@ -3,3 +3,4 @@ psycopg2>=2.8
 mysqlclient>=1.4.3
 crispy-bootstrap5>=2023
 django-crispy-forms>=2.1
+djangorestframework>=3.15

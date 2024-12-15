@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'crispy_forms',
     'crispy_bootstrap5',
     'account',
@@ -108,4 +109,24 @@ WSGI_APPLICATION = 'base.wsgi.application'
 # application should use.                                                      #
 ################################################################################
 
-CRISPY_TEMPLATE_PACK = 'bootstrap5'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+
+
+################################################################################
+# REST FRAMEWORK                                                               #
+################################################################################
+# This section configures the RESTful API settings for the application.        #
+################################################################################
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle', # For anonymous users
+        'rest_framework.throttling.UserRateThrottle', # For authenticated users
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '500/hour',  # 500 requests per hour for anonymous users
+        'user': '4000/hour', # 4000 requests per hour for authenticated users
+    },
+}
