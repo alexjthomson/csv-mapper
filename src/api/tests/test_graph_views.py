@@ -96,6 +96,7 @@ class GraphDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.graph.refresh_from_db()
         self.assertEqual(self.graph.name, "Updated Graph")
+        self.assertEqual(self.graph.description, "This has been updated")
 
     def test_delete_graph_success(self):
         response = self.client.delete(f'/api/graph/{self.graph.id}/')
