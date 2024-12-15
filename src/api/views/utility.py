@@ -1,7 +1,10 @@
 from io import StringIO
 from urllib.parse import urlparse
 from urllib.request import urlopen
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
+from io import StringIO
+from ssl import create_default_context
+from django.http import JsonResponse
 
 from api.views.response import error_response
 
@@ -38,6 +41,7 @@ def read_source_at(location):
     2. Response: This will be either a JSON error response (if the first tuple
        value is false), or the CSV file.
     """
+    
     # Parse the URL for the source:
     try:
         url = urlparse(location)
@@ -48,13 +52,19 @@ def read_source_at(location):
         return False, error_response(f'Cannot open location because `{url.scheme}` is not a supported URL scheme.', 400)
     
     # Read the CSV data from the source:
+    ssl_context = create_default_context()
     try:
-        with urlopen(location) as response:
+        with urlopen(location, context=ssl_context, timeout=10) as response:
+            if response.getheader('Content-Type') != 'text/csv':
+                return False, JsonResponse({"error": "URL does not return a CSV file."}, status=400)
             csv_content = response.read().decode('utf-8')
-    except Exception as exception:
-        return False, error_response(f'Failed to read CSV data from location `{location}`: {exception}.', 400)
+    except HTTPError as e:
+        return False, JsonResponse({"error": f"HTTP error: {e.code} - {e.reason}"}, status=e.code)
+    except URLError as e:
+        return False, JsonResponse({"error": f"URL error: {e.reason}"}, status=400)
+    except Exception as e:
+        return False, JsonResponse({"error": f"Unexpected error: {e}"}, status=500)
 
     # Convert the CSV content into a CSV file:
     csv_file = StringIO(csv_content)
-
     return True, csv_file
