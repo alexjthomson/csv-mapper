@@ -44,17 +44,17 @@ class SourceListViewTests(APITestCase):
         self.assertEqual(len(response_data['data']), 2)
 
     def test_get_sources_no_permission(self):
-        # Authenticate the user:
-        self.client.login(username='testuser', password='password')
+        """
+        Ensure that a user without the 'view_source' permission cannot access the get method.
+        """
         
-        # Clear all permissions for the test user:
-        self.user.user_permissions.clear()
-        self.user.save()
-        
-        # Perform the GET request;
+        # Authenticate as a user without permissions
+        self.client.force_authenticate(user=self.user)
+
+        # Make the GET request
         response = self.client.get('/api/source/')
-        
-        # Assert that the response status is 403:
+
+        # Assert that the response is a 403 Forbidden:
         self.assertEqual(response.status_code, 403)
 
     def test_post_source_success(self):
