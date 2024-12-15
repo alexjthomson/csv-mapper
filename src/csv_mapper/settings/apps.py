@@ -98,3 +98,14 @@ TEMPLATES = [
 ################################################################################
 
 WSGI_APPLICATION = 'csv_mapper.wsgi.application'
+
+
+
+################################################################################
+# CRISPY TEMPLATE                                                              #
+################################################################################
+# This is a string that determines the crispy template pack that the           #
+# application should use.                                                      #
+################################################################################
+
+CRISPY_TEMPLATE_PACK = 'bootstrap5'

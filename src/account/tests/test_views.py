@@ -66,14 +66,14 @@ class AccountViewsTests(TestCase):
 
     def test_change_password_view_get(self):
         self.client.login(username='testuser', password='password123')
-        response = self.client.get(reverse('account:change-password'))
+        response = self.client.get(reverse('account:change_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/change_password.html')
         self.assertIsInstance(response.context['form'], PasswordChangeForm)
 
     def test_change_password_view_post_valid(self):
         self.client.login(username='testuser', password='password123')
-        response = self.client.post(reverse('account:change-password'), {
+        response = self.client.post(reverse('account:change_password'), {
             'old_password': 'password123',
             'new_password1': 'NewComplexPass123!',
             'new_password2': 'NewComplexPass123!'
@@ -84,7 +84,7 @@ class AccountViewsTests(TestCase):
 
     def test_change_password_view_post_invalid(self):
         self.client.login(username='testuser', password='password123')
-        response = self.client.post(reverse('account:change-password'), {
+        response = self.client.post(reverse('account:change_password'), {
             'old_password': 'wrongpassword',
             'new_password1': 'NewComplexPass123!',
             'new_password2': 'NewComplexPass123!'
@@ -94,11 +94,11 @@ class AccountViewsTests(TestCase):
         self.assertContains(response, 'Your old password was entered incorrectly.')
 
     def test_forgot_password_view_get(self):
-        response = self.client.get(reverse('account:forgot-password'))
+        response = self.client.get(reverse('account:forgot_password'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/forgot_password.html')
 
     def test_forgot_password_view_redirect_authenticated(self):
         self.client.login(username='testuser', password='password123')
-        response = self.client.get(reverse('account:forgot-password'))
+        response = self.client.get(reverse('account:forgot_password'))
         self.assertRedirects(response, '/')
