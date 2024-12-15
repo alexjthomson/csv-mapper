@@ -3,9 +3,7 @@ name: "csv"
 services:
   django:
     container_name: "csv_django"
-    build:
-      context: "./docker/django"
-      dockerfile: "dockerfile"
+    image: "ghcr.io/alexjthomson/csv-mapper"
     restart: "unless-stopped"
     privileged: false
     user: "1000:1000"
