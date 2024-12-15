@@ -453,11 +453,11 @@ class GraphDataView(APIView):
                     # a bounds check that ensures the `column_index` exists.
                     column_index = dataset.column
                     if not (0 <= column_index < len(current_row)): # nosec
-                        return error_response(
-                            f'Column is out of bounds (value: `{column_index}`, min: `0`, max: `{len(current_row)}`). '
-                            f'Please update the column within the graph dataset to point to an existing column.',
-                            400
-                        )
+                        return error_response( # nosec
+                            f'Column is out of bounds (value: `{column_index}`, min: `0`, max: `{len(current_row)}`). ' # nosec
+                            f'Please update the column within the graph dataset to point to an existing column.', # nosec
+                            400 # nosec
+                        ) # nosec
                     
                     # We should read the dataset data:
                     dataset_data = []
