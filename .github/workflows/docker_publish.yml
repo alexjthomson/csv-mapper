@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Docker Publish
 on:
   schedule:
     - cron: '43 4 * * *'
