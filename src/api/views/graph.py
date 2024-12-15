@@ -9,6 +9,7 @@ from api.views.response import *
 from api.views.utility import decode_json_body, read_source_at
 
 import csv
+import nh3
 from json import JSONDecodeError
 
 class GraphListView(APIView):
@@ -40,8 +41,8 @@ class GraphListView(APIView):
         for graph in graphs:
             graph_json.append({
                 'id': graph.id,
-                'name': graph.name,
-                'description': graph.description,
+                'name': nh3.clean(graph.name),
+                'description': nh3.clean(graph.description),
             })
         
         # Return the graph JSON data:
@@ -109,7 +110,10 @@ class GraphDetailView(APIView):
             return error_response_graph_not_found(graph_id)
         
         # Return the graph:
-        return success_response({ 'name': graph.name, 'description': graph.description }, 200)
+        return success_response({
+            'name': nh3.clean(graph.name),
+            'description': nh3.clean(graph.description)
+        }, 200)
     
     def delete(self, request, graph_id):
         """
@@ -128,7 +132,7 @@ class GraphDetailView(APIView):
         
         # Delete the graph:
         graph.delete()
-        return success_response(f'Deleted graph `{graph_id}`.', 200)
+        return success_response(None, 200, message=nh3.clean(f'Deleted graph `{graph_id}`.'))
     
     def put(self, request, graph_id):
         """
@@ -167,7 +171,7 @@ class GraphDetailView(APIView):
         graph.name = name.strip()
         graph.description = description.strip()
         graph.save()
-        return success_response(None, 200, message=f'Updated graph `{graph_id}`.')
+        return success_response(None, 200, message=nh3.clean(f'Updated graph `{graph_id}`.'))
 
 class GraphDatasetListView(APIView):
     """
@@ -193,6 +197,7 @@ class GraphDatasetListView(APIView):
         datasets_json = []
 
         # Iterate each dataset:
+        # TODO: Ideally this should be sanitised with nh3
         for dataset in datasets:
             datasets_json.append({
                 'id': dataset.id,
@@ -290,10 +295,10 @@ class GraphDatasetDetailView(APIView):
 
         # Return the dataset:
         response_data = {
-            'label': dataset.label,
-            'plot_type': dataset.plot_type,
+            'label': nh3.clean(dataset.label),
+            'plot_type': nh3.clean(dataset.plot_type),
             'is_axis': dataset.is_axis,
-            'source_name': dataset.source.name,
+            'source_name': nh3.clean(dataset.source.name),
             'source_id': dataset.source.id,
             'column_id': dataset.column
         }
@@ -316,7 +321,7 @@ class GraphDatasetDetailView(APIView):
         
         # Delete the dataset;
         dataset.delete()
-        return success_response(f'Deleted dataset `${dataset_id}`.', 200)
+        return success_response(None, 200, message=nh3.clean(f'Deleted dataset `${dataset_id}`.'))
     
     def put(self, request, graph_id, dataset_id):
         """
@@ -373,7 +378,7 @@ class GraphDatasetDetailView(APIView):
         dataset.source = Source.objects.get(id=source_id)
         dataset.column = column_id
         dataset.save()
-        return success_response(f'Updated dataset `{dataset_id}`.', 200)
+        return success_response(None, 200, message=nh3.clean(f'Updated dataset `{dataset_id}`.'))
 
 class GraphDataView(APIView):
     """
@@ -387,13 +392,16 @@ class GraphDataView(APIView):
         Fetches the ChartJs data for the graph.
         """
         
+        # TODO: The output of this function needs sanitising
+        # TODO: This function needs simplifying
+        
         # Check permissions:
         if not request.user.has_perm('api.view_graph'):
             return error_response_no_perms()
         
         # Get graph:
         try:
-            graph = Graph.objects.get(id=graph_id)
+            graph = Graph.objects.get(id=graph_id) # TODO: Unused variable
         except ObjectDoesNotExist:
             return error_response_graph_not_found(graph_id)
 
