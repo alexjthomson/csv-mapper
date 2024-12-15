@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 def create_user_profile(sender, instance, created, **kwargs):
     """
     Automatically add newly created users to the 'default' group. If the
-    'default' group doesn't exist, log a warning and create it.
+    'default' group doesn't exist, a warning will be logged but the group will
+    not be created.
 
     Arguments:
     - sender: The model class sending the signal (`User`).
@@ -24,15 +25,14 @@ def create_user_profile(sender, instance, created, **kwargs):
             logger.error("Signal received for a non-User instance: %s", type(instance))
             return
 
-        # Try add new user to default group:
         try:
-            # Try to fetch the default group:
-            group, group_created = Group.objects.get_or_create(name='default')
-            if group_created:
-                logger.warning("'default' group did not exist and was created.")
-
+            # Attempt to fetch the default group:
+            group = Group.objects.get(name='default')
             # Add the user to the group:
             instance.groups.add(group)
+        except Group.DoesNotExist:
+            # Log a warning if the group doesn't exist:
+            logger.warning("'default' group does not exist. User '%s' was not added to any group.", instance.username)
         except Exception as exception:
-            # Log any unexpected error:
-            logger.error("Failed to add user to the 'default' group: %s", str(exception))
+            # Log any other unexpected errors:
+            logger.error("An error occurred while adding user '%s' to the 'default' group: %s", instance.username, str(exception))
