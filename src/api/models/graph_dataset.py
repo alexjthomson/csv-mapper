@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MinLengthValidator
-from api.models import Graph, Source
+from api.models.graph import Graph
+from api.models.source import Source
 
 class GraphDataset(models.Model):
     """
