@@ -5,7 +5,6 @@ from api.views import (
     error_response_invalid_json_body,
     error_response_expected_field,
     error_response_invalid_field,
-    error_response_http_method_unsupported,
     error_response_source_not_found,
     error_response_graph_not_found,
     error_response_graph_dataset_not_found
@@ -31,11 +30,6 @@ class ResponseFunctionsTests(TestCase):
         response = error_response_invalid_field("field_name")
         self.assertEqual(response.status_code, 400)
         self.assertEqual(json.loads(response.content.decode('utf-8'))["message"], "Expected `field_name` field has an invalid value.")
-
-    def test_error_response_http_method_unsupported(self):
-        response = error_response_http_method_unsupported("PATCH")
-        self.assertEqual(response.status_code, 405)
-        self.assertEqual(json.loads(response.content.decode('utf-8'))["message"], "Unsupported HTTP method: `PATCH`.")
 
     def test_error_response_source_not_found(self):
         response = error_response_source_not_found(1)

@@ -54,14 +54,6 @@ def error_response_invalid_field(field_name):
     """
     return error_response(f'Expected `{field_name}` field has an invalid value.', 400)
 
-# TODO: The below method should be able to be removed, check references before removal
-def error_response_http_method_unsupported(http_method):
-    """
-    Constructs an error response that indicates that the HTTP method used to
-    access the API endpoint is not a supported method.
-    """
-    return error_response(f'Unsupported HTTP method: `{http_method}`.', 405)
-
 def error_response_source_not_found(source_id):
     """
     Constructs an error response that indicates that the specified source does
