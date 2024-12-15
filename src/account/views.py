@@ -10,7 +10,7 @@ def login_view(request):
     # Check if the user is currently logged in, if they are, we should log them
     # out:
     if request.user.is_authenticated:
-        return redirect('/account/logout')
+        return redirect('/account/logout/')
 
     # Check if POST data was sent to the view:
     if request.method == 'POST':
@@ -42,7 +42,7 @@ def login_view(request):
 @login_required
 def logout_view(request):
     logout(request)
-    return redirect('/account/login')
+    return redirect('/account/login/')
 
 def register_view(request):
     # Check if the user is currently logged in, if they are, we should log them

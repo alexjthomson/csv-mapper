@@ -30,7 +30,7 @@
 <script>
     async function updateGraphs() {
         $('#graph-error').hide();
-        const response = await queryApi('/api/graph');
+        const response = await queryApi('/api/graph/');
         if (response.result == 'error') {
             $('#graph-error').text(`Failed to update graphs: ${response.message}`).hide();
         } else {
