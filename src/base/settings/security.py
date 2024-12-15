@@ -50,7 +50,8 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '[::1]',
-    '10.0.0.20'
+    '10.0.0.20',
+    'csv.alexthomson.dev'
 ]
 
 
