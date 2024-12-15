@@ -5,13 +5,12 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
 from rest_framework.test import APIClient, APITestCase
-from unittest.mock import patch, MagicMock
-from api.models import Source
 from api.views.source import *
-from io import StringIO
 
 class ThrottlingTestCase(APITestCase):
     def setUp(self):
+        self.url = '/api/source/'
+        
         self.factory = RequestFactory()
 
         # Create the required 'default' group
