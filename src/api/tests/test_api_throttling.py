@@ -8,6 +8,8 @@ from rest_framework.test import APIClient, APITestCase
 from api.views.source import *
 
 class ThrottlingTestCase(APITestCase):
+    databases = {'default', 'graph'}
+    
     def setUp(self):
         self.url = '/api/source/'
         
