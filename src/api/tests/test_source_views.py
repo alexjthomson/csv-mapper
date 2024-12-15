@@ -49,6 +49,7 @@ class SourceListViewTests(APITestCase):
         
         # Clear all permissions for the test user:
         self.user.user_permissions.clear()
+        self.user.save()
         
         # Perform the GET request;
         response = self.client.get('/api/source/')
@@ -190,10 +191,16 @@ class SourceDataViewTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         
         # Validate the data structure:
-        self.assertIsInstance(response.json(), list)
-        self.assertEqual(len(response.json()), 2)
-        self.assertEqual(response.json()[0]['name'], 'Header1')
-        self.assertEqual(response.json()[1]['name'], 'Header2')
+        response_data = response.json()  # Extract the response JSON
+        self.assertIsInstance(response_data, dict)  # Validate the root is a dict
+        self.assertIn('data', response_data)  # Ensure the 'data' key is present
+        self.assertIsInstance(response_data['data'], list)  # Validate the 'data' value is a list
+
+        # Validate the content of the list
+        data = response_data['data']
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]['name'], 'Header1')
+        self.assertEqual(data[1]['name'], 'Header2')
 
     @patch('api.views.source.read_source_at')
     def test_get_source_data_read_failure(self, mock_read_source_at):
