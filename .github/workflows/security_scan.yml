@@ -1,0 +1,22 @@
+name: Security Scan
+on:
+  push:
+    branches:
+      - main
+jobs:
+  bandit-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Python dependencies
+        run: pip install bandit
+      - name: Run Bandit
+        run: bandit -r src/
+  safety-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Python dependencies
+        run: pip install safety
+      - name: Run Safety
+        run: safety check
