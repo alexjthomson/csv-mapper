@@ -29,5 +29,4 @@ sudo docker-compose down --remove-orphans --rmi all --volumes
 sudo docker-compose up --force-recreate --build -d && sudo docker-compose down
 sudo docker image prune -f
 
-#sudo docker compose run django django-admin startproject csv_mapper . && sudo docker-compose down
 sudo docker-compose up -d

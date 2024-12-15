@@ -58,7 +58,7 @@ MIDDLEWARE = [
 # correct view.                                                                #
 ################################################################################
 
-ROOT_URLCONF = 'csv_mapper.urls'
+ROOT_URLCONF = 'base.urls'
 
 
 
@@ -97,7 +97,7 @@ TEMPLATES = [
 # entry-point for WSGI-compatible web-servers to serve your project.           #
 ################################################################################
 
-WSGI_APPLICATION = 'csv_mapper.wsgi.application'
+WSGI_APPLICATION = 'base.wsgi.application'
 
 
 
