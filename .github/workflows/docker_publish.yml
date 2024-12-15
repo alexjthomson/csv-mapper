@@ -1,7 +1,5 @@
 name: Docker Publish
 on:
-  schedule:
-    - cron: '43 4 * * *'
   push:
     branches: [ "stable" ]
     # Publish semver tags as releases.
@@ -13,6 +11,8 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
+  # github branch name
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.tags }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
