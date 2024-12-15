@@ -5,6 +5,7 @@ from rest_framework.test import APIClient, APITestCase
 from unittest.mock import patch, MagicMock
 from api.models import Source
 from api.views.source import *
+from io import StringIO
 
 class SourceListViewTests(APITestCase):
     databases = {'default', 'graph'}
@@ -43,10 +44,16 @@ class SourceListViewTests(APITestCase):
         self.assertEqual(len(response_data['data']), 2)
 
     def test_get_sources_no_permission(self):
+        # Authenticate the user:
+        self.client.login(username='testuser', password='password')
+        
+        # Clear all permissions for the test user:
         self.user.user_permissions.clear()
+        
+        # Perform the GET request;
         response = self.client.get('/api/source/')
-        response_data = json.loads(response.content) # TODO: REMOVE
-        print(response_data) # TODO: REMOVE
+        
+        # Assert that the response status is 403:
         self.assertEqual(response.status_code, 403)
 
     def test_post_source_success(self):
@@ -166,17 +173,19 @@ class SourceDataViewTests(APITestCase):
     
     @patch('api.views.source.read_source_at')
     def test_get_source_data_success(self, mock_read_source_at):
-        # Mock the CSV file content
-        mock_csv_file = MagicMock()
-        mock_csv_file.__iter__.return_value = iter([["Header1", "Header2"], ["Row1Col1", "Row1Col2"]])
+        # Mock the CSV file content as a string, like a real CSV file
+        mock_csv_content = "Header1,Header2\nRow1Col1,Row1Col2\n"
+        mock_csv_file = StringIO(mock_csv_content)
+
+        # Mock the read_source_at function to return success with the mock file:
         mock_read_source_at.return_value = (True, mock_csv_file)
 
-        # Create a test source with a valid URL scheme
+        # Set the source location and headers
         self.source.location = 'http://example.com/test.csv'
         self.source.has_header = True
         self.source.save()
 
-        # Make the GET request
+        # Perform the GET request
         response = self.client.get(f'/api/source/{self.source.id}/data/')
         
         # Assertions
