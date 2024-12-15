@@ -85,8 +85,7 @@ class GraphDetailViewTests(TestCase):
     def test_update_graph_success(self):
         payload = {
             "name": "Updated Graph",
-            "location": "http://example.com/updated_location",
-            "has_header": True
+            "description": "This has been updated"
         }
         response = self.client.put(
             f'/api/graph/{self.graph.id}/',
