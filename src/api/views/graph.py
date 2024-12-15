@@ -444,9 +444,20 @@ class GraphDataView(APIView):
                         continue
                     
                     # We should check that the columns value is in bounds:
+                    # NOTE: The below section has been marked `nosec` because it
+                    # flags a false-positive during a security scan and is
+                    # identified as a potential SQL injection vector though
+                    # string-based query construction. This is likely due to the
+                    # variable names chosen. This code has nothing to do with
+                    # SQL databases and never interacts with them. It is simply
+                    # a bounds check that ensures the `column_index` exists.
                     column_index = dataset.column
-                    if not (0 <= column_index < len(current_row)):
-                        return error_response(f'Column is out of bounds (value: `{column_index}`, min: `0`, max: `{len(current_row)}`). Please update the column within the graph dataset to point to an existing column.', 400)
+                    if not (0 <= column_index < len(current_row)): # nosec
+                        return error_response(
+                            f'Column is out of bounds (value: `{column_index}`, min: `0`, max: `{len(current_row)}`). '
+                            f'Please update the column within the graph dataset to point to an existing column.',
+                            400
+                        )
                     
                     # We should read the dataset data:
                     dataset_data = []
