@@ -1,3 +1,5 @@
+import nh3
+import json
 import requests
 from io import StringIO
 from urllib.parse import urlparse
@@ -7,10 +9,53 @@ from api.views.response import error_response
 
 ALLOWED_CSV_CHARSET='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./\\({)}[]+<>,!?£$%^&* '
 
+class SanitisedJSON:
+    def __init__(self, data):
+        """Initialise with the parsed JSON data."""
+        
+        self._data = data
+
+    def __getitem__(self, key):
+        """Get sanitised value for a field."""
+        
+        value = self._data.get(key)
+        if isinstance(value, str):  # Sanitize only strings
+            return nh3.clean_text(value)
+        elif isinstance(value, dict):  # Recursively wrap nested dictionaries
+            return SanitisedJSON(value)
+        elif isinstance(value, list):  # Recursively clean lists
+            return [nh3.clean_text(item) if isinstance(item, str) else item for item in value]
+        return value
+
+    def get(self, key, default=None):
+        """Get sanitized value with a default."""
+        return self[key] if key in self._data else default
+
+    def as_dict(self):
+        """Return the raw dictionary."""
+        return self._data
+
+def decode_json_body(request):
+    """
+    Gets the JSON body of a request.
+    
+    This should be used anywhere where JSON is fetched from the user since this
+    sanitises each field fetched from it.
+    
+    Throws:
+    - json.JSONDecodeError: Thrown if the JSON cannot be decoded from the
+      request body.
+    """
+    
+    # Get JSON request body:
+    json_request = json.loads(request.body.decode('utf-8'))
+    SanitisedJSON(json_request)
+
 def clean_csv_value(value):
     """
     Cleans a CSV entry by retaining only allowed characters and trimming any
-    leading or trailing whitespace.
+    leading or trailing whitespace. Additionally, this will clean the text to
+    prevent things such as XSS attacks.
     
     Arguments:
     - value (any): The input value to clean.
@@ -25,11 +70,14 @@ def clean_csv_value(value):
     value = str(value)
     
     # Remove disallowed characters and trim whitespace:
-    return ''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip()
+    return nh3.clean_text(''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip())
 
 def read_source_at(location):
     """
     Reads a CSV source at the given location and returns the raw CSV data.
+    
+    This function will also clean the CSV resource fetched (if it was found),
+    preventing things such as XSS.
 
     Returns:
     This function returns a tuple of two values:
@@ -58,6 +106,6 @@ def read_source_at(location):
         return False, error_response(f'Failed to read CSV data from location `{location}`: {exception}.', 400)
 
     # Convert the CSV content into a CSV file:
-    csv_file = StringIO(csv_content)
+    csv_file = StringIO(nh3.clean_text(csv_content))
 
     return True, csv_file

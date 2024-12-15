@@ -6,10 +6,10 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from api.models import Source
 from api.views.response import *
-from api.views.utility import clean_csv_value, read_source_at
+from api.views.utility import clean_csv_value, decode_json_body, read_source_at
 
 import csv
-import json
+from json import JSONDecodeError
 
 class SourceListView(APIView):
     """
@@ -61,8 +61,8 @@ class SourceListView(APIView):
         
         # Get JSON request body:
         try:
-            json_request = json.loads(request.body.decode('utf-8'))
-        except:
+            json_request = decode_json_body(request)
+        except JSONDecodeError:
             return error_response_invalid_json_body()
         
         name = json_request.get('name')
@@ -164,8 +164,8 @@ class SourceDetailView(APIView):
         
         # Get JSON request body:
         try:
-            json_request = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError:
+            json_request = decode_json_body(request)
+        except JSONDecodeError:
             return error_response_invalid_json_body()
 
         # Get JSON fields:

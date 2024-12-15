@@ -6,10 +6,10 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from api.models import Source, Graph, GraphDataset
 from api.views.response import *
-from api.views.utility import read_source_at
+from api.views.utility import decode_json_body, read_source_at
 
 import csv
-import json
+from json import JSONDecodeError
 
 class GraphListView(APIView):
     """
@@ -58,7 +58,7 @@ class GraphListView(APIView):
         
         # Get JSON request body:
         try:
-            json_request = json.loads(request.body.decode('utf-8'))
+            json_request = decode_json_body(request)
         except:
             return error_response_invalid_json_body()
         
@@ -141,8 +141,8 @@ class GraphDetailView(APIView):
         
         # Get JSON request body:
         try:
-            json_request = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError:
+            json_request = decode_json_body(request)
+        except JSONDecodeError:
             return error_response_invalid_json_body()
         
         # Get JSON fields:
@@ -218,8 +218,8 @@ class GraphDatasetListView(APIView):
         
         # Get JSON request body:
         try:
-            json_request = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError:
+            json_request = decode_json_body(request)
+        except JSONDecodeError:
             return error_response_invalid_json_body()
         
         # Get JSON fields:
@@ -329,8 +329,8 @@ class GraphDatasetDetailView(APIView):
         
         # Get JSON request body:
         try:
-            json_request = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError:
+            json_request = decode_json_body(request)
+        except JSONDecodeError:
             return error_response_invalid_json_body()
         
         # Get JSON fields:
