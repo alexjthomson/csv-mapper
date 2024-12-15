@@ -45,6 +45,8 @@ class SourceListViewTests(APITestCase):
     def test_get_sources_no_permission(self):
         self.user.user_permissions.clear()
         response = self.client.get('/api/source/')
+        response_data = json.loads(response.content) # TODO: REMOVE
+        print(response_data) # TODO: REMOVE
         self.assertEqual(response.status_code, 403)
 
     def test_post_source_success(self):
@@ -177,6 +179,9 @@ class SourceDataViewTests(APITestCase):
         response = self.client.get(f'/api/source/{self.source.id}/data/')
         
         # Assertions
+        response_data = json.loads(response.content) # TODO: REMOVE
+        print(response_data) # TODO: REMOVE
+        
         self.assertEqual(response.status_code, 200)  # Ensure the response status is OK
         self.assertIn('columns', response.json()['data'])  # Check if 'columns' exists in the response
 
