@@ -13,6 +13,7 @@ RUN mkdir /log
 RUN chown 1000:1000 /log
 
 WORKDIR /code
+COPY ../src/. /code/
 RUN chown 1000:1000 /code
 COPY requirements.txt /code/
 RUN pip install -r requirements.txt
