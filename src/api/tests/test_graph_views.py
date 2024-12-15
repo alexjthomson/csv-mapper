@@ -29,7 +29,7 @@ class GraphListViewTests(TestCase):
     def test_get_graphs_success(self):
         response = self.client.get(reverse('api:graph_list'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['data']), 2)
+        self.assertEqual(len(response.json()['data']), 2)
 
     def test_get_graphs_no_permission(self):
         self.client.logout()
@@ -127,7 +127,7 @@ class GraphDatasetListViewTests(TestCase):
     def test_get_datasets_success(self):
         response = self.client.get(reverse('api:graph_dataset_list', args=[self.graph.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(len(response.json()['data']), 1)
 
     def test_create_dataset_success(self):
         data = {
@@ -169,7 +169,7 @@ class GraphDatasetDetailViewTests(TestCase):
     def test_get_dataset_success(self):
         response = self.client.get(reverse('api:graph_dataset_detail', args=[self.graph.id, self.dataset.id]))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['data']['label'], "Dataset 1")
+        self.assertEqual(response.json()['data']['label'], "Dataset 1")
 
     def test_delete_dataset_success(self):
         response = self.client.delete(reverse('api:graph_dataset_detail', args=[self.graph.id, self.dataset.id]))
