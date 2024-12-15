@@ -16,6 +16,10 @@ mkdir ./src
 # Secrets directory:
 mkdir ./.secrets
 
+# Django secret key:
+touch ./.secrets/django_secret_key
+openssl rand -hex 64 > ./.secrets/django_secret_key
+
 # MySQL root user:
 touch ./.secrets/mysql_root_password
 openssl rand -hex 64 > ./.secrets/mysql_root_password

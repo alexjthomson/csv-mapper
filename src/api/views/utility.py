@@ -44,16 +44,13 @@ def read_source_at(location):
     except URLError:
         return False, error_response(f'Cannot parse location: `{location}`.', 400)
     
+    if url.scheme not in ('http', 'https'):
+        return False, error_response(f'Cannot open location because `{url.scheme}` is not a supported URL scheme.', 400)
+    
     # Read the CSV data from the source:
     try:
-        if url.scheme in ('http', 'https', 'ftp'):
-            with urlopen(location) as response:
-                csv_content = response.read().decode('utf-8')
-        elif url.scheme == 'file':
-            with open(url.path, 'r') as file:
-                csv_content = file.read()
-        else:
-            return False, error_response(f'Cannot open location because `{url.scheme}` is not a supported URL scheme.', 400)
+        with urlopen(location) as response:
+            csv_content = response.read().decode('utf-8')
     except Exception as exception:
         return False, error_response(f'Failed to read CSV data from location `{location}`: {exception}.', 400)
 

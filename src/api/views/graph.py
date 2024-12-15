@@ -444,15 +444,15 @@ class GraphDataView(APIView):
                         continue
                     
                     # We should check that the columns value is in bounds:
-                    column_id = dataset.column
-                    if not (0 <= column_id < len(current_row)):
-                        return error_response(f'Column is out of bounds (value: `{column_id}`, min: `0`, max: `{len(current_row)}`). Please update the column within the graph dataset to point to an existing column.', 400)
+                    column_index = dataset.column
+                    if not (0 <= column_index < len(current_row)):
+                        return error_response(f'Column is out of bounds (value: `{column_index}`, min: `0`, max: `{len(current_row)}`). Please update the column within the graph dataset to point to an existing column.', 400)
                     
                     # We should read the dataset data:
                     dataset_data = []
                     while current_row is not None:
-                        if column_id < len(current_row):
-                            dataset_data.append(current_row[column_id])
+                        if column_index < len(current_row):
+                            dataset_data.append(current_row[column_index])
                         else:
                             dataset_data.append(None)
                         current_row = next(csv_reader, None)

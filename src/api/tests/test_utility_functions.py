@@ -68,9 +68,3 @@ class UtilityFunctionTests(TestCase):
         success, response = read_source_at("invalid-url")
         self.assertFalse(success)
         self.assertEqual(response.status_code, 400)
-
-    @patch("builtins.open", mock_open(read_data="col1,col2\nval1,val2"))
-    def test_read_source_at_file(self):
-        success, csv_file = read_source_at("file:///path/to/source.csv")
-        self.assertTrue(success)
-        self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
