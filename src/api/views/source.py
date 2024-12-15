@@ -25,6 +25,9 @@ class SourceListView(APIView):
         """
         Retrieves a list of every source.
         """
+        
+        print(f"Authenticated: {not isinstance(request.user, AnonymousUser)}")
+        print(f"User Permissions: {request.user.get_all_permissions()}")
 
         # Check permissions:
         if not request.user.has_perm('api.view_source'):

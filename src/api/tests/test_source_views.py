@@ -185,12 +185,15 @@ class SourceDataViewTests(APITestCase):
         self.source.has_header = True
         self.source.save()
 
-        # Perform the GET request
+        # Perform the GET request:
         response = self.client.get(f'/api/source/{self.source.id}/data/')
-        
-        # Assertions
         self.assertEqual(response.status_code, 200)
-        self.assertIn('columns', response.json()['data'])
+        
+        # Validate the data structure:
+        self.assertIsInstance(response.json(), list)
+        self.assertEqual(len(response.json()), 2)
+        self.assertEqual(response.json()[0]['name'], 'Header1')
+        self.assertEqual(response.json()[1]['name'], 'Header2')
 
     @patch('api.views.source.read_source_at')
     def test_get_source_data_read_failure(self, mock_read_source_at):
