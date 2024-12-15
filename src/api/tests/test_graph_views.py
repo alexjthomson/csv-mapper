@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.contrib.auth.models import User, Group, Permission
 from django.urls import reverse
 from django.test import TestCase
@@ -9,6 +10,8 @@ class GraphListViewTests(TestCase):
     databases = {'default', 'graph'}
     
     def setUp(self):
+        cache.clear()
+        
         self.client = APIClient()
 
         # Create test users

@@ -1,6 +1,7 @@
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
+from django.core.cache import cache
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
@@ -11,8 +12,9 @@ class ThrottlingTestCase(APITestCase):
     databases = {'default', 'graph'}
     
     def setUp(self):
-        self.url = '/api/source/'
+        cache.clear()
         
+        self.url = '/api/source/'
         self.factory = RequestFactory()
 
         # Create the required 'default' group
@@ -33,7 +35,6 @@ class ThrottlingTestCase(APITestCase):
 
         # APIClient setup
         self.client = APIClient()
-        self.client.force_authenticate(user=self.user)
 
     def test_anonymous_throttling(self):
         throttle_limit = 500 # Anonymous rate limit
@@ -52,7 +53,7 @@ class ThrottlingTestCase(APITestCase):
         throttle_limit = 4000 # Registered user rate limit
 
         # Authenticate the user
-        self.client.login(username='testuser', password='password')
+        self.client.force_authenticate(user=self.user)
 
         # Make requests as an authenticated user
         for _ in range(throttle_limit):

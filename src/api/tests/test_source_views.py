@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
@@ -11,6 +12,8 @@ class SourceListViewTests(APITestCase):
     databases = {'default', 'graph'}
     
     def setUp(self):
+        cache.clear()
+        
         self.factory = RequestFactory()
 
         # Create the required 'default' group

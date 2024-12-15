@@ -1,9 +1,12 @@
+from django.core.cache import cache
 from django.test import TestCase
 from unittest.mock import Mock
 from api.dbrouters import ApiRouter
 
 class TestApiRouter(TestCase):
     def setUp(self):
+        cache.clear()
+        
         self.router = ApiRouter()
         self.mock_model = Mock()
         self.mock_model._meta.app_label = 'api'
