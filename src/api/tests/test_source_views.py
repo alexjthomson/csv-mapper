@@ -164,7 +164,7 @@ class SourceDataViewTests(APITestCase):
         # Create a source for testing
         self.source = Source.objects.create(name="Source 1", location="path/to/source.csv", has_header=True)
     
-    @patch('api.views.read_source_at')
+    @patch('api.views.source.read_source_at')
     def test_get_source_data_success(self, mock_read_source_at):
         # Mock the CSV file content
         mock_csv_file = MagicMock()
@@ -183,7 +183,7 @@ class SourceDataViewTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('columns', response.json()['data'])
 
-    @patch('api.views.read_source_at')
+    @patch('api.views.source.read_source_at')
     def test_get_source_data_read_failure(self, mock_read_source_at):
         mock_read_source_at.return_value = (False, error_response('Failed to read source.', 400))
 
