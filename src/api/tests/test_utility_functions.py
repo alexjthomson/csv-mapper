@@ -14,7 +14,7 @@ class UtilityFunctionTests(TestCase):
         # Test cleaning a CSV value with allowed and disallowed characters:
         self.assertEqual(
             clean_csv_value("hello123_-./\\({)}[]+<>,!?£$%^&*"),
-            "hello123_-./\\({)}[]+<>,!?£$%^&*"
+            "hello123_-./\({)}[]+&lt;&gt;,!?£$%^&amp;*" # Characters such as < and > should be escaped
         )
         self.assertEqual(
             clean_csv_value("This contains no disallowed characters`:;\"'@#~=¬|"),
