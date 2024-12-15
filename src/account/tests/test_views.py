@@ -1,12 +1,15 @@
 from django.test import TestCase, Client
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from account.forms import RegisterForm
 
 class AccountViewsTests(TestCase):
     def setUp(self):
-        self.client = Client()
+        # Create the default group:
+        self.default_group = Group.objects.create(name='default')
+
+        # Create a test user:
         self.user = User.objects.create_user(username='testuser', password='password123')
     
     def test_login_view_get(self):

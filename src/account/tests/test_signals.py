@@ -6,6 +6,11 @@ class TestCreateUserProfileSignal(TestCase):
         # Create the default group required by the signal:
         self.default_group = Group.objects.create(name='default')
 
+    def test_signal_creates_user_profile(self):
+        # Create a user and check if they are added to the default group:
+        user = User.objects.create_user(username='testuser', password='password')
+        self.assertTrue(user.groups.filter(name='default').exists())
+
     def test_user_added_to_default_group_on_creation(self):
         # Create a user
         user = User.objects.create_user(username='testuser', password='password')
