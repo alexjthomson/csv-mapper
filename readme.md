@@ -68,12 +68,13 @@ application.
 - Python, Pip, Django
 - Bootstrap, HTML, CSS, JavaScript, jQuery, ChartJS
 - MySQL
-- GitHub, GitHub Actions
 
 ##### Development & Deployment
 - VSCodium
 - Obsidian (note taking)
 - Arch Linux (deployment server)
+- Bandit, Safety (security & vulnerability testing)
+- GitHub, GitHub Actions (automated testing)
 
 ---
 
