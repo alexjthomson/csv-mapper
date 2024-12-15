@@ -19,13 +19,13 @@ jobs:
           pip install -r docker/django/requirements.txt
       - name: Create mock filesystem
         run: |
-          mkdir -p ./src/logs ./.secrets
-          touch ./.secrets/django_secret_key
-          openssl rand -hex 64 > ./.secrets/django_secret_key
+          mkdir -p ./src/logs
+          touch ./src/django_secret_key
+          openssl rand -hex 64 > ./src/django_secret_key
       - name: Run tests
         working-directory: ./src
         env:
-          DJANGO_SECRET_KEY_FILE: ./.secrets/django_secret_key
+          DJANGO_SECRET_KEY_FILE: ./django_secret_key
           DJANGO_LOG_DIRECTORY: ./logs
           DJANGO_LOG_LEVEL: WARNING
           DJANGO_ENVIRONMENT: DEVELOPMENT
