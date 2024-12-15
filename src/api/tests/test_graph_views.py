@@ -76,9 +76,6 @@ class GraphDetailViewTests(TestCase):
 
         self.client.login(username="permuser", password="password")
 
-        # Create test graph
-        self.graph = Graph.objects.create(name="Graph 1", description="Test Graph 1")
-
     def test_get_graphs_success(self):
         response = self.client.get(f'/api/graph/{self.graph.id}/')
         self.assertEqual(response.status_code, 200)
