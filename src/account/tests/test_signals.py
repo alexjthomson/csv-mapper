@@ -25,7 +25,7 @@ class TestCreateUserProfileSignal(TestCase):
         # Delete the default group:
         self.default_group.delete()
 
-        # Create a user
+        # Create a user:
         user = User.objects.create_user(username='testuser', password='password')
 
         # Refresh the user instance to fetch related group data:
