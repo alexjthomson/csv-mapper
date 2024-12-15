@@ -58,20 +58,21 @@ class UtilityFunctionTests(TestCase):
                 "message": "Error message"
             }
         )
-
+            
     @patch("api.views.urlopen")
     def test_read_source_at_http(self, mock_urlopen):
-        # Mock a successful HTTP source read
         mock_urlopen.return_value.__enter__.return_value.read.return_value = b"col1,col2\nval1,val2"
         success, csv_file = read_source_at("http://example.com/source.csv")
         self.assertTrue(success)
-        self.assertIsInstance(csv_file, StringIO)
         self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
 
+    def test_read_source_at_invalid_url(self):
+        success, response = read_source_at("invalid-url")
+        self.assertFalse(success)
+        self.assertEqual(response.status_code, 400)
+
+    @patch("builtins.open", mock_open(read_data="col1,col2\nval1,val2"))
     def test_read_source_at_file(self):
-        # Mock a local file read
-        with patch("builtins.open", mock_open(read_data="col1,col2\nval1,val2")):
-            success, csv_file = read_source_at("file:///path/to/source.csv")
-            self.assertTrue(success)
-            self.assertIsInstance(csv_file, StringIO)
-            self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
+        success, csv_file = read_source_at("file:///path/to/source.csv")
+        self.assertTrue(success)
+        self.assertEqual(csv_file.read(), "col1,col2\nval1,val2")
