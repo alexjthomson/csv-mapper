@@ -43,8 +43,7 @@ class SourceListViewTests(APITestCase):
 
         response = self.client.get('/api/source/')
         self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
-        self.assertEqual(len(response_data['data']), 2)
+        self.assertEqual(len(response.json()['data']), 2)
 
     def test_get_sources_no_permission(self):
         """
@@ -111,8 +110,7 @@ class SourceDetailViewTests(APITestCase):
     def test_get_source_success(self):
         response = self.client.get(f'/api/source/{self.source.id}/')
         self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
-        self.assertEqual(response_data['data']['name'], self.source.name)
+        self.assertEqual(response.json()['data']['name'], self.source.name)
 
     def test_get_source_not_found(self):
         response = self.client.get('/api/source/999/')

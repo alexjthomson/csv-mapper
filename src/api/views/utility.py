@@ -20,11 +20,11 @@ class SanitisedJSON:
         
         value = self._data.get(key)
         if isinstance(value, str):  # Sanitize only strings
-            return nh3.clean_text(value)
+            return nh3.clean(value)
         elif isinstance(value, dict):  # Recursively wrap nested dictionaries
             return SanitisedJSON(value)
         elif isinstance(value, list):  # Recursively clean lists
-            return [nh3.clean_text(item) if isinstance(item, str) else item for item in value]
+            return [nh3.clean(item) if isinstance(item, str) else item for item in value]
         return value
 
     def get(self, key, default=None):
@@ -70,7 +70,7 @@ def clean_csv_value(value):
     value = str(value)
     
     # Remove disallowed characters and trim whitespace:
-    return nh3.clean_text(''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip())
+    return nh3.clean(''.join([char for char in value if char in ALLOWED_CSV_CHARSET]).strip())
 
 def read_source_at(location):
     """
@@ -106,6 +106,6 @@ def read_source_at(location):
         return False, error_response(f'Failed to read CSV data from location `{location}`: {exception}.', 400)
 
     # Convert the CSV content into a CSV file:
-    csv_file = StringIO(nh3.clean_text(csv_content))
+    csv_file = StringIO(nh3.clean(csv_content))
 
     return True, csv_file
