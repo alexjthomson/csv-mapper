@@ -1,7 +1,6 @@
 import json
 from django.test import TestCase
 from unittest.mock import patch, mock_open
-from io import StringIO
 from api.views import (
     clean_csv_value,
     success_response,
@@ -10,7 +9,6 @@ from api.views import (
 )
 
 class UtilityFunctionTests(TestCase):
-
     def test_clean_csv_value(self):
         # Test cleaning a CSV value with allowed and disallowed characters:
         self.assertEqual(
@@ -59,7 +57,7 @@ class UtilityFunctionTests(TestCase):
             }
         )
             
-    @patch("api.views.urlopen")
+    @patch("api.views.utility.urlopen")
     def test_read_source_at_http(self, mock_urlopen):
         mock_urlopen.return_value.__enter__.return_value.read.return_value = b"col1,col2\nval1,val2"
         success, csv_file = read_source_at("http://example.com/source.csv")
