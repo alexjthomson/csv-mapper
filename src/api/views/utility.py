@@ -49,7 +49,7 @@ def decode_json_body(request):
     
     # Get JSON request body:
     json_request = json.loads(request.body.decode('utf-8'))
-    SanitisedJSON(json_request)
+    return SanitisedJSON(json_request)
 
 def clean_csv_value(value):
     """
