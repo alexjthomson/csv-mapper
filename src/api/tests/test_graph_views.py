@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.test import TestCase
 from rest_framework.test import APIClient
 from api.models import Source, Graph, GraphDataset
+import json
 
 class GraphListViewTests(TestCase):
     databases = {'default', 'graph'}
@@ -89,7 +90,7 @@ class GraphDetailViewTests(TestCase):
         }
         response = self.client.put(
             f'/api/graph/{self.graph.id}/',
-            payload,
+            data=json.dumps(payload),
             content_type='application/json'
         )
         print(response.json())
