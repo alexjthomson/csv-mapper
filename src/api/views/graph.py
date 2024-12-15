@@ -40,7 +40,7 @@ class GraphListView(APIView):
         for graph in graphs:
             graph_json.append({
                 'id': graph.id,
-                'name': nh3.clean(graph.name),
+                'name': graph.name,
                 'description': graph.description,
             })
         
