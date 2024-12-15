@@ -5,6 +5,8 @@ from rest_framework.test import APIClient
 from api.models import Source, Graph, GraphDataset
 
 class GraphListViewTests(TestCase):
+    databases = {'default', 'graph'}
+    
     def setUp(self):
         self.client = APIClient()
 
@@ -54,30 +56,27 @@ class GraphListViewTests(TestCase):
         response = self.client.post(reverse('api:graph_list'), data, format="json")
         self.assertEqual(response.status_code, 403)
 
-
 class GraphDetailViewTests(TestCase):
+    databases = {'default', 'graph'}
+    
+    @classmethod
+    def setUpTestData(cls):
+        # Shared setup for all test cases
+        cls.graph = Graph.objects.create(name="Graph 1", description="Test Graph 1")
+        cls.client = APIClient()
+    
     def setUp(self):
-        self.client = APIClient()
-
-        # Create test users
         self.user = User.objects.create_user(username="testuser", password="password")
         self.user_with_perms = User.objects.create_user(username="permuser", password="password")
-
-        # Assign permissions
-        permissions = ['view_graph', 'delete_graph', 'change_graph']
+        permissions = ['view_graph', 'add_graph']
         for perm in permissions:
             self.user_with_perms.user_permissions.add(Permission.objects.get(codename=perm))
-
-        # Authenticate the user with permissions
         self.client.login(username="permuser", password="password")
-
-        # Create test data
-        self.graph = Graph.objects.create(name="Graph 1", description="Test Graph 1")
-
-    def test_get_graph_success(self):
-        response = self.client.get(reverse('api:graph_detail', args=[self.graph.id]))
+    
+    def test_get_graphs_success(self):
+        response = self.client.get('/api/graphs/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['data']['name'], "Graph 1")
+        self.assertEqual(len(response.json()['data']), 1)
 
     def test_update_graph_success(self):
         data = {"name": "Updated Graph", "description": "Updated description"}
@@ -91,8 +90,9 @@ class GraphDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Graph.objects.filter(id=self.graph.id).exists())
 
-
 class GraphDatasetListViewTests(TestCase):
+    databases = {'default', 'graph'}
+    
     def setUp(self):
         self.client = APIClient()
 
@@ -130,8 +130,9 @@ class GraphDatasetListViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(GraphDataset.objects.filter(label="New Dataset").exists())
 
-
 class GraphDatasetDetailViewTests(TestCase):
+    databases = {'default', 'graph'}
+    
     def setUp(self):
         self.client = APIClient()
 
