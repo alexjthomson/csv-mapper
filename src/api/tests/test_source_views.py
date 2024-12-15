@@ -37,17 +37,17 @@ class SourceListViewTests(APITestCase):
         Source.objects.create(name="Source 1", location="path/to/source1.csv", has_header=True)
         Source.objects.create(name="Source 2", location="path/to/source2.csv", has_header=False)
 
-        response = self.client.get('/api/v1/sources/')
+        response = self.client.get('/api/sources/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['data']), 2)
 
     def test_get_sources_no_permission(self):
         self.user.user_permissions.clear()
-        response = self.client.get('/api/v1/sources/')
+        response = self.client.get('/api/sources/')
         self.assertEqual(response.status_code, 403)
 
     def test_post_source_success(self):
-        response = self.client.post('/api/v1/sources/', {
+        response = self.client.post('/api/sources/', {
             "name": "Test Source",
             "location": "path/to/test.csv",
             "has_header": True
@@ -56,7 +56,7 @@ class SourceListViewTests(APITestCase):
         self.assertEqual(Source.objects.count(), 1)
 
     def test_post_source_invalid_data(self):
-        response = self.client.post('/api/v1/sources/', {
+        response = self.client.post('/api/sources/', {
             "name": "Test Source",
             "location": None,  # Invalid field
             "has_header": True
@@ -95,25 +95,25 @@ class SourceDetailViewTests(APITestCase):
         self.source = Source.objects.create(name="Source 1", location="path/to/source.csv", has_header=True)
     
     def test_get_source_success(self):
-        response = self.client.get(f'/api/v1/sources/{self.source.id}/')
+        response = self.client.get(f'/api/sources/{self.source.id}/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['data']['name'], self.source.name)
 
     def test_get_source_not_found(self):
-        response = self.client.get('/api/v1/sources/999/')
+        response = self.client.get('/api/sources/999/')
         self.assertEqual(response.status_code, 404)
 
     def test_delete_source_success(self):
-        response = self.client.delete(f'/api/v1/sources/{self.source.id}/')
+        response = self.client.delete(f'/api/sources/{self.source.id}/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Source.objects.count(), 0)
 
     def test_delete_source_not_found(self):
-        response = self.client.delete('/api/v1/sources/999/')
+        response = self.client.delete('/api/sources/999/')
         self.assertEqual(response.status_code, 404)
 
     def test_put_source_success(self):
-        response = self.client.put(f'/api/v1/sources/{self.source.id}/', {
+        response = self.client.put(f'/api/sources/{self.source.id}/', {
             "name": "Updated Source",
             "location": "path/to/updated.csv",
             "has_header": False
@@ -124,7 +124,7 @@ class SourceDetailViewTests(APITestCase):
         self.assertEqual(self.source.has_header, False)
 
     def test_put_source_invalid_data(self):
-        response = self.client.put(f'/api/v1/sources/{self.source.id}/', {
+        response = self.client.put(f'/api/sources/{self.source.id}/', {
             "name": None,  # Invalid field
             "location": "path/to/updated.csv",
             "has_header": False
@@ -166,7 +166,7 @@ class SourceDataViewTests(APITestCase):
         mock_csv_file.__iter__.return_value = iter([["Header1", "Header2"], ["Row1Col1", "Row1Col2"]])
         mock_read_source_at.return_value = (True, mock_csv_file)
 
-        response = self.client.get(f'/api/v1/sources/{self.source.id}/data/')
+        response = self.client.get(f'/api/sources/{self.source.id}/data/')
         self.assertEqual(response.status_code, 200)
         self.assertIn('columns', response.data['data'])
 
@@ -174,9 +174,9 @@ class SourceDataViewTests(APITestCase):
     def test_get_source_data_read_failure(self, mock_read_source_at):
         mock_read_source_at.return_value = (False, error_response('Failed to read source.', 400))
 
-        response = self.client.get(f'/api/v1/sources/{self.source.id}/data/')
+        response = self.client.get(f'/api/sources/{self.source.id}/data/')
         self.assertEqual(response.status_code, 400)
 
     def test_get_source_data_not_found(self):
-        response = self.client.get('/api/v1/sources/999/data/')
+        response = self.client.get('/api/sources/999/data/')
         self.assertEqual(response.status_code, 404)
