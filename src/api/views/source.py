@@ -65,17 +65,17 @@ class SourceListView(APIView):
         except JSONDecodeError:
             return error_response_invalid_json_body()
         
-        name = json_request.get('name')
+        name = json_request['name']
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-        location = json_request.get('location')
+        location = json_request['location']
         if location is None:
             return error_response_expected_field('location')
         elif not isinstance(location, str):
             return error_response_invalid_field('location')
-        has_header = json_request.get('has_header')
+        has_header = json_request['has_header']
         if has_header is None:
             return error_response_expected_field('has_header')
         elif not isinstance(has_header, bool):
@@ -169,17 +169,17 @@ class SourceDetailView(APIView):
             return error_response_invalid_json_body()
 
         # Get JSON fields:
-        name = json_request.get('name')
+        name = json_request['name']
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-        location = json_request.get('location')
+        location = json_request['location']
         if name is None:
             return error_response_expected_field('location')
         elif not isinstance(name, str):
             return error_response_invalid_field('location')
-        has_header = json_request.get('has_header')
+        has_header = json_request['has_header']
         if has_header is None:
             return error_response_expected_field('has_header')
         elif not isinstance(has_header, bool):

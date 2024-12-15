@@ -63,12 +63,12 @@ class GraphListView(APIView):
             return error_response_invalid_json_body()
         
         # Get and validate JSON fields:
-        name = json_request.get('name')
+        name = json_request['name']
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-        description = json_request.get('description')
+        description = json_request['description']
         if description is None:
             return error_response_expected_field('description')
         elif not isinstance(description, str):
@@ -146,12 +146,12 @@ class GraphDetailView(APIView):
             return error_response_invalid_json_body()
         
         # Get JSON fields:
-        name = json_request.get('name')
+        name = json_request['name']
         if name is None:
             return error_response_expected_field('name')
         elif not isinstance(name, str):
             return error_response_invalid_field('name')
-        description = json_request.get('description')
+        description = json_request['description']
         if description is None:
             return error_response_expected_field('description')
         elif not isinstance(description, str):
@@ -223,27 +223,27 @@ class GraphDatasetListView(APIView):
             return error_response_invalid_json_body()
         
         # Get JSON fields:
-        label = json_request.get('label')
+        label = json_request['label']
         if label is None:
             return error_response_expected_field('label')
         elif not isinstance(label, str):
             return error_response_invalid_field('label')
-        plot_type = json_request.get('plot_type')
+        plot_type = json_request['plot_type']
         if plot_type is None:
             return error_response_expected_field('plot_type')
         elif not isinstance(plot_type, str):
             return error_response_invalid_field('plot_type')
-        is_axis = json_request.get('is_axis')
+        is_axis = json_request['is_axis']
         if is_axis is None:
             return error_response_expected_field('is_axis')
         elif not isinstance(is_axis, bool):
             return error_response_invalid_field('is_axis')
-        source_id = json_request.get('source_id')
+        source_id = json_request['source_id']
         if source_id is None:
             return error_response_expected_field('source_id')
         elif not isinstance(source_id, int):
             return error_response_invalid_field('source_id')
-        column_id = json_request.get('column_id')
+        column_id = json_request['column_id']
         if column_id is None:
             return error_response_expected_field('column_id')
         elif not isinstance(column_id, int):
@@ -334,27 +334,27 @@ class GraphDatasetDetailView(APIView):
             return error_response_invalid_json_body()
         
         # Get JSON fields:
-        label = json_request.get('label')
+        label = json_request['label']
         if label is None:
             return error_response_expected_field('label')
         elif not isinstance(label, str):
             return error_response_invalid_field('label')
-        plot_type = json_request.get('plot_type')
+        plot_type = json_request['plot_type']
         if plot_type is None:
             return error_response_expected_field('plot_type')
         elif not isinstance(plot_type, str):
             return error_response_invalid_field('plot_type')
-        is_axis = json_request.get('is_axis')
+        is_axis = json_request['is_axis']
         if is_axis is None:
             return error_response_expected_field('is_axis')
         elif not isinstance(is_axis, bool):
             return error_response_invalid_field('is_axis')
-        source_id = json_request.get('source_id')
+        source_id = json_request['source_id']
         if source_id is None:
             return error_response_expected_field('source_id')
         elif not isinstance(source_id, int):
             return error_response_invalid_field('source_id')
-        column_id = json_request.get('column_id')
+        column_id = json_request['column_id']
         if column_id is None:
             return error_response_expected_field('column_id')
         elif not isinstance(column_id, int):
