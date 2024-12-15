@@ -73,6 +73,7 @@ application.
 - Python, Pip, Django
 - Bootstrap, HTML, CSS, JavaScript, jQuery, ChartJS
 - MySQL
+- GitHub, GitHub Actions
 
 ##### Development & Deployment
 - VSCodium
