@@ -171,7 +171,8 @@ class SourceDataViewTests(APITestCase):
         mock_csv_file.__iter__.return_value = iter([["Header1", "Header2"], ["Row1Col1", "Row1Col2"]])
         mock_read_source_at.return_value = (True, mock_csv_file)
 
-        # Create a test source with has_header=True
+        # Create a test source with a valid URL scheme
+        self.source.location = 'http://example.com/test.csv'
         self.source.has_header = True
         self.source.save()
 
@@ -179,11 +180,8 @@ class SourceDataViewTests(APITestCase):
         response = self.client.get(f'/api/source/{self.source.id}/data/')
         
         # Assertions
-        response_data = json.loads(response.content) # TODO: REMOVE
-        print(response_data) # TODO: REMOVE
-        
-        self.assertEqual(response.status_code, 200)  # Ensure the response status is OK
-        self.assertIn('columns', response.json()['data'])  # Check if 'columns' exists in the response
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('columns', response.json()['data'])
 
     @patch('api.views.read_source_at')
     def test_get_source_data_read_failure(self, mock_read_source_at):
