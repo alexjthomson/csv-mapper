@@ -66,29 +66,40 @@ class GraphDetailViewTests(TestCase):
         cls.client = APIClient()
     
     def setUp(self):
+        self.client = APIClient()
         self.user = User.objects.create_user(username="testuser", password="password")
         self.user_with_perms = User.objects.create_user(username="permuser", password="password")
-        permissions = ['view_graph', 'add_graph']
+
+        permissions = ['view_graph', 'delete_graph', 'change_graph']
         for perm in permissions:
             self.user_with_perms.user_permissions.add(Permission.objects.get(codename=perm))
+
         self.client.login(username="permuser", password="password")
-    
+
+        # Create test graph
+        self.graph = Graph.objects.create(name="Graph 1", description="Test Graph 1")
+
     def test_get_graphs_success(self):
-        response = self.client.get('/api/graphs/')
+        response = self.client.get(f'/api/graph/{self.graph.id}/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()['data']), 1)
+        self.assertEqual(response.json()['data']['name'], "Graph 1")
 
     def test_update_graph_success(self):
-        data = {"name": "Updated Graph", "description": "Updated description"}
-        response = self.client.put(reverse('api:graph_detail', args=[self.graph.id]), data, format="json")
+        payload = {"name": "Updated Graph", "description": "Updated Description"}
+        response = self.client.put(
+            f'/api/graph/{self.graph.id}/',
+            payload,
+            content_type='application/json'
+        )
         self.assertEqual(response.status_code, 200)
         self.graph.refresh_from_db()
         self.assertEqual(self.graph.name, "Updated Graph")
 
     def test_delete_graph_success(self):
-        response = self.client.delete(reverse('api:graph_detail', args=[self.graph.id]))
+        response = self.client.delete(f'/api/graph/{self.graph.id}/')
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(Graph.objects.filter(id=self.graph.id).exists())
+        with self.assertRaises(Graph.DoesNotExist):
+            Graph.objects.get(id=self.graph.id)
 
 class GraphDatasetListViewTests(TestCase):
     databases = {'default', 'graph'}
