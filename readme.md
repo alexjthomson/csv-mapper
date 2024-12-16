@@ -35,6 +35,11 @@ dependencies listed above have been installed on the host machine.
 4. The container and MySQL database should now be setup. The application can be
    started by running `docker-compose up -d` as a super-user.
 
+### Developing on Local
+There is a Docker Compose file called `docker-compose-dev.yaml` which should be
+used to build a local development instance. This instance will update as you
+make changes to code.
+
 ## Project Structure
 - `/.secrets/`: Contains sensitive information such as the plain-text `root` and
   `django` MySQL user passwords. This directory is not included in the
