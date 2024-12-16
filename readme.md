@@ -5,8 +5,6 @@ An online platform that provides real-time graphs driven by CSV data.
 ![Django Test Result](https://github.com/alexjthomson/csv-mapper/actions/workflows/django_tests.yml/badge.svg)
 ![Security Scan Result](https://github.com/alexjthomson/csv-mapper/actions/workflows/security_scan.yml/badge.svg)
 
----
-
 ![Screenshot of the application dashboard](https://github.com/alexjthomson1882/csv-mapper/blob/master/docs/images/screenshots/dashboard/user_standard.png)
 
 ## Online Demo
