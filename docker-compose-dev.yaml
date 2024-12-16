@@ -1,0 +1,82 @@
+---
+name: "csv"
+services:
+  django:
+    container_name: "csv_django"
+    build:
+      context: "."
+      dockerfile: "dockerfile"
+    restart: "unless-stopped"
+    privileged: false
+    user: "1000:1000"
+    depends_on:
+      mysql:
+        condition: "service_healthy"
+    secrets:
+      - "django_secret_key"
+      - "mysql_django_password"
+    environment:
+      - "DJANGO_ENVIRONMENT=DEVELOPMENT"
+      - "DJANGO_SECRET_KEY_FILE=/run/secrets/django_secret_key"
+      - "DJANGO_LOG_LEVEL=WARNING"
+      - "MYSQL_HOST=mysql"
+      - "MYSQL_PORT=3306"
+      - "MYSQL_MAIN_DATABASE=main"
+      - "MYSQL_GRAPH_DATABASE=graph"
+      - "MYSQL_USER=django"
+      - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
+    ports:
+      - "8000:8000"
+    volumes:
+      - "django_src:/code"
+      - "django_log:/log"
+  mysql:
+    container_name: "csv_mysql"
+    hostname: "mysql"
+    image: "mysql:8.2.0"
+    restart: "unless-stopped"
+    privileged: false
+    user: "1000:1000"
+    secrets:
+      - "mysql_root_password"
+      - "mysql_django_password"
+    environment:
+      - "MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password"
+      - "MYSQL_DATABASE=main"
+      - "MYSQL_USER=django"
+      - "MYSQL_PASSWORD_FILE=/run/secrets/mysql_django_password"
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=no"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      retries: 5
+      interval: "5s"
+      start_period: "5s"
+      timeout: "10s"
+    volumes:
+      - "mysql_data:/var/lib/mysql"
+secrets:
+  django_secret_key:
+    file: "./.secrets/django_secret_key"
+  mysql_root_password:
+    file: "./.secrets/mysql_root_password"
+  mysql_django_password:
+    file: "./.secrets/mysql_django_password"
+volumes:
+  django_src:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./src"
+  django_log:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./log/django"
+  mysql_data:
+    driver: "local"
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "./data/mysql"

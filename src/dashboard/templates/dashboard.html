@@ -50,7 +50,7 @@
 <script>
     charts = {};
     async function updateGrid() {
-        const graphResponse = await queryApi('/api/graph/');
+        const graphResponse = await getGraphs();
         grid = $('#graph-grid');
         if (graphResponse.result == 'error') {
             grid.empty().append(
@@ -65,7 +65,7 @@
         } else {
             $.each(graphResponse.data, async function(index, graph) {
                 await new Promise(resolve => setTimeout(resolve, index * 500));
-                const graphDataResponse = await queryApi(`/api/graph/${graph.id}/data/`);
+                const graphDataResponse = await getGraphChartJsData(graph.id);
                 var graphDiv = $(`#graph_${index}`);
                 const isNew = graphDiv.length == 0;
                 if (isNew) {

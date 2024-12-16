@@ -59,7 +59,7 @@ class GraphListView(APIView):
         # Get JSON request body:
         try:
             json_request = decode_json_body(request)
-        except:
+        except JSONDecodeError:
             return error_response_invalid_json_body()
         
         # Get and validate JSON fields:

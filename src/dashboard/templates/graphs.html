@@ -30,7 +30,7 @@
 <script>
     async function updateGraphs() {
         $('#graph-error').hide();
-        const response = await queryApi('/api/graph/');
+        const response = await getGraphs();
         if (response.result == 'error') {
             $('#graph-error').text(`Failed to update graphs: ${response.message}`).hide();
         } else {
@@ -88,11 +88,11 @@
             switch (method) {
                 case 'view':
                     $('#inspect-graph-modal').modal('show');
-                    setInspectModalInfo(targetGraph);
+                    setInspectModalInfo(parseInt(targetGraph));
                     break;
                 case 'edit':
                     $('#edit-graph-modal').modal('show');
-                    setEditModalInfo(targetGraph)
+                    setEditModalInfo(parseInt(targetGraph))
                     break;
                 default:
                     console.error(`Unrecognised method: \`${method}\`.`);
@@ -135,7 +135,11 @@
     }
     async function submitCreateGraphForm() {
         $('#create-graph-error').hide();
-        const response = await queryApi('/api/graph/', method='POST', body=formToJson($('#create-graph-form')));
+        const form = $('#create-graph-form');
+        const response = await createGraph(
+            form.find('[name="name"]').val(),
+            form.find('[name="description"]').val(),
+        );
         if (response.result == 'success') {
             await updateGraphs();
             $('#create-graph-modal').modal('hide');
@@ -167,7 +171,7 @@
     var updateGraph = false;
     async function setInspectModalInfo(graphId) {
         $('#inspect-graph-error').hide();
-        const response = await queryApi(`/api/graph/${graphId}/`);
+        const response = await getGraph(graphId);
         if (response.result == 'success') {
             $('#inspect-graph-label').text(response.data.name);
         }
@@ -176,7 +180,7 @@
         updateInspectModal(graphId, true);
     }
     async function updateInspectModal(graphId, firstTime) {
-        const response = await queryApi(`/api/graph/${graphId}/data/`);
+        const response = await getGraphChartJsData(graphId);
         if (response.result != 'success') {
             $('#inspect-graph-error').text(response.message).show();
         } else {
@@ -310,7 +314,7 @@
         {% if perms.api.add_graphdataset %}
         await showAddGraphDatasetEditor(graphId);
         {% endif %}
-        const response = await queryApi(`/api/graph/${graphId}/`);
+        const response = await getGraph(graphId);
         if (response.result != 'success') {
             $('#edit-graph-error').text(response.message).show();
         } else {
@@ -322,7 +326,12 @@
     }
     async function submitEditGraphForm(graphId) {
         $('#edit-graph-error').hide();
-        const response = await queryApi(`/api/graph/${graphId}/`, method='PUT', body=formToJson($('#edit-graph-form')));
+        const form = $('#edit-graph-form');
+        const response = await updateGraph(
+            graphId,
+            form.find('[name="name"]').val(),
+            form.find('[name="description"]').val()
+        );
         if (response.result != 'success') {
             $('#edit-graph-error').text(response.message).show();
         } else {
@@ -332,7 +341,7 @@
     }
     async function updateGraphDatasetTable(graphId) {
         $('#edit-graph-dataset-table').empty();
-        const response = await queryApi(`/api/graph/${graphId}/dataset/`);
+        const response = await getGraphDatasets(graphId);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -387,7 +396,7 @@
         {% if perms.api.view_source %}
         const sources = $('#edit-graph-dataset-source').empty().val('');
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
-        const response = await queryApi('/api/source/');
+        const response = await getSources();
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -410,8 +419,8 @@
     async function updateSourceColumns() {
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
         {% if perms.api.view_source %}
-        const selectedSource = $('#edit-graph-dataset-source').find(":selected").val();
-        const response = await queryApi(`/api/source/${selectedSource}/data/`);
+        const selectedSource = parseInt($('#edit-graph-dataset-source').find(":selected").val());
+        const response = await getSourceData(selectedSource);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -434,13 +443,14 @@
     async function submitAddGraphDataSet(graphId, datasetId) {
         const datasetPlot = $('#edit-graph-dataset-plot').val();
         const isAxis = datasetPlot == 'axis';
-        const response = await queryApi(`/api/graph/${graphId}/dataset/`, method='POST', body={
-            label: $('#edit-graph-dataset-label').val(),
-            plot_type: isAxis ? 'none' : datasetPlot,
-            is_axis: isAxis,
-            source_id: parseInt($('#edit-graph-dataset-source').val()),
-            column_id: parseInt($('#edit-graph-dataset-source-column').val())
-        });
+        const response = await createGraphDataset(
+            graphId,
+            $('#edit-graph-dataset-label').val(),
+            datasetPlot,
+            isAxis,
+            parseInt($('#edit-graph-dataset-source').val()),
+            parseInt($('#edit-graph-dataset-source-column').val())
+        );
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -460,7 +470,10 @@
     async function editGraphDataSet(graphId, datasetId) {
         clearGraphDatasetEditor();
         await updateGraphDatasetEditor(false);
-        const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`);
+        const response = await getGraphDataset(
+            graphId,
+            datasetId
+        );
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -477,13 +490,15 @@
     async function submitEditGraphDataSet(graphId, datasetId) {
         const datasetPlot = $('#edit-graph-dataset-plot').val();
         const isAxis = datasetPlot == 'axis';
-        const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`, method='PUT', body={
-            label: $('#edit-graph-dataset-label').val(),
-            plot_type: isAxis ? 'none' : datasetPlot,
-            is_axis: isAxis,
-            source_id: parseInt($('#edit-graph-dataset-source').val()),
-            column_id: parseInt($('#edit-graph-dataset-source-column').val())
-        });
+        const response = await updateGraphDataset(
+            graphId,
+            datasetId,
+            $('#edit-graph-dataset-label').val(),
+            datasetPlot,
+            isAxis,
+            parseInt($('#edit-graph-dataset-source').val()),
+            parseInt($('#edit-graph-dataset-source-column').val())
+        );
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -506,7 +521,7 @@
         $('#delete-graph-dataset-modal').modal('show');
     }
     async function deleteGraphDataSet(graphId, datasetId) {
-        const response = await queryApi(`/api/graph/${graphId}/dataset/${datasetId}/`, method='DELETE');
+        const response = await deleteGraphDataset(graphId, datasetId);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -544,7 +559,7 @@
         $('#delete-graph-button').attr('onclick', `submitDeleteGraphForm(${graphId})`)
     }
     async function submitDeleteGraphForm(graphId) {
-        const response = await queryApi(`/api/graph/${graphId}/`, method='DELETE');
+        const response = await deleteGraph(graphId);
         if (response.result != 'success') {
             $('#graph-error').text(response.message).show();
         } else {

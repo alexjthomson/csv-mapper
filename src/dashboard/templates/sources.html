@@ -32,7 +32,7 @@
 <script>
     async function updateSources() {
         $('#source-error').hide();
-        const response = await queryApi('/api/source/');
+        const response = await getSources();
         const tableBody = $('#source-table');
         tableBody.empty();
         if (response.result == 'error') {
@@ -124,7 +124,12 @@
     }
     async function submitCreateSourceForm() {
         $('#source-error').hide();
-        const response = await queryApi('/api/source/', method='POST', body=formToJson($('#create-source-form')));
+        const form = $('#create-source-form');
+        const response = await createSource(
+            form.find('[name="name"]').val(),
+            form.find('[name="location"]').val(),
+            form.find('[name="has_header"]').prop('checked'),
+        );
         if (response.result == 'error') {
             $('#source-error').text(response.message).show();
         } else {
@@ -167,7 +172,7 @@
         tableHead.empty();
         const tableBody = $('#inspect-source-tbody');
         tableBody.empty();
-        const response = await queryApi(`/api/source/${id}/data/`);
+        const response = await getSourceData(id);
         if (response.result != 'success') {
             console.error(response.message);
             $('#inspect-source-error').text(response.message).show();
@@ -240,7 +245,7 @@
         $('#edit-source-location').val('');
         $('#edit-source-has_header').prop('checked', false);
         $('#edit-source-submit-button').attr('onclick', `submitEditSourceForm(${source_id})`);
-        const response = await queryApi(`/api/source/${source_id}/`);
+        const response = await getSource(source_id);
         if (response.result != 'success') {
             $('#edit-source-error').text(response.message).show();
         } else {
@@ -252,7 +257,13 @@
     }
     async function submitEditSourceForm(source_id) {
         $('#edit-source-error').hide();
-        const response = await queryApi(`/api/source/${source_id}/`, method='PUT', body=formToJson($('#edit-source-form')));
+        const form = $('#edit-source-form');
+        const response = await updateSource(
+            source_id,
+            form.find('[name="name"]').val(),
+            form.find('[name="location"]').val(),
+            form.find('[name="has_header"]').prop('checked')
+        );
         if (response.result != 'success') {
             $('#edit-source-error').text(response.message).show();
         } else {
@@ -289,8 +300,8 @@
     async function submitDeleteSourceForm() {
         $('#source-error').hide();
         const formData = $('#delete-source-form').serializeArray();
-        const sourceId = formData[0].value;
-        const response = await queryApi(`/api/source/${sourceId}/`, method='DELETE');
+        const sourceId = parseInt(formData[0].value);
+        const response = await deleteSource(sourceId);
         if (response.result == 'error') {
             $('#source-error').text(response.message).show();
         } else {
