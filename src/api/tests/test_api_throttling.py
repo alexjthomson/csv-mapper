@@ -39,7 +39,7 @@ class ThrottlingTestCase(APITestCase):
     # NOTE: Anonymous throttling cannot be tested since you must be
     # authenticated to access any of the API endpoints.
     # def test_anonymous_throttling(self):
-    #     throttle_limit = 500 # Anonymous rate limit
+    #     throttle_limit = 100 # Anonymous rate limit
 
     #     # Make requests as an anonymous user
     #     for _ in range(throttle_limit):
@@ -52,7 +52,7 @@ class ThrottlingTestCase(APITestCase):
     #     self.assertIn('throttled', response.data['detail'].lower())
 
     def test_registered_user_throttling(self):
-        throttle_limit = 4000 # Registered user rate limit
+        throttle_limit = 500 # Registered user rate limit
 
         # Authenticate the user
         self.client.force_authenticate(user=self.user)
