@@ -5,11 +5,11 @@ An online platform that provides real-time graphs driven by CSV data.
 ![Django Test Result](https://github.com/alexjthomson/csv-mapper/actions/workflows/django_tests.yml/badge.svg)
 ![Security Scan Result](https://github.com/alexjthomson/csv-mapper/actions/workflows/security_scan.yml/badge.svg)
 
-![Screenshot of the application dashboard](https://github.com/alexjthomson1882/csv-mapper/blob/master/docs/images/screenshots/dashboard/user_standard.png)
-
 ## Online Demo
 An online demonstration of the application can be found at
 [https://csv.alexthomson.dev](https://csv.alexthomson.dev/account/login).
+
+![Screenshot of the application dashboard](https://github.com/alexjthomson1882/csv-mapper/blob/master/docs/images/screenshots/dashboard/user_standard.png)
 
 ## Rationale
 This project was created to allow Gamma Telecom to view performance critical
