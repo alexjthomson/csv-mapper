@@ -15,13 +15,15 @@ An online demonstration of the application can be found at
 This project was created to allow Gamma Telecom to view performance critical
 business systems.
 
-## Dependencies
+## Quick-Start Guide
+### Dependencies
 This application was built to run inside a Docker container on a Linux host. The
-following dependencies are required:
+following dependencies are required. These can typically be found within your
+distributions package manager:
 - `docker`
 - `docker-compose`
 
-## Quick-Start Guide
+### Creating an Instance
 This application was built to run in a Docker container in a stack alongside a
 MySQL container. This guide is written for Arch based Linux distributions.
 Please ensure each of the required packages listed above have been installed
