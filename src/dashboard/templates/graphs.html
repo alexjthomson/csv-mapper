@@ -88,11 +88,11 @@
             switch (method) {
                 case 'view':
                     $('#inspect-graph-modal').modal('show');
-                    setInspectModalInfo(targetGraph);
+                    setInspectModalInfo(parseInt(targetGraph));
                     break;
                 case 'edit':
                     $('#edit-graph-modal').modal('show');
-                    setEditModalInfo(targetGraph)
+                    setEditModalInfo(parseInt(targetGraph))
                     break;
                 default:
                     console.error(`Unrecognised method: \`${method}\`.`);
@@ -419,7 +419,7 @@
     async function updateSourceColumns() {
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
         {% if perms.api.view_source %}
-        const selectedSource = $('#edit-graph-dataset-source').find(":selected").val();
+        const selectedSource = parseInt($('#edit-graph-dataset-source').find(":selected").val());
         const response = await getSourceData(selectedSource);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();

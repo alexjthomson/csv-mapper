@@ -524,23 +524,6 @@ async function getGraphChartJsData(graphId) {
 }
 
 /**
- * Converts a form into a JSON object.
- * 
- * @param {*} $form 
- * @returns Returns a JSON version of the form.
- */
-function formToJson($form) {
-    json = {};
-    $form.find('.form-control').each(function () {
-        json[this.name] = this.value;
-    });
-    $form.find('.form-check-input').each(function () {
-        json[this.name] = this.checked;
-    });
-    return json;
-}
-
-/**
  * Gets a URL parameter from the URL.
  * 
  * @param {string} param Name of the parameter to fetch.
