@@ -75,11 +75,151 @@ async function queryApi(endpoint, method='GET', body=null) {
 }
 
 /**
+ * Queries the API for every source.
+ * 
+ * @returns Returns a list of every source as a JSON object.
+ */
+async function getSources() {
+    return await queryApi('/api/source/', method='GET');
+}
+
+/**
+ * Creates a new source.
+ * 
+ * @param {string} name Name of the source.
+ * @param {string} location Location that the application should fetch the data
+ * for this source from. This is typically an HTTPS endpoint.
+ * @param {boolean} hasHeader A boolean that describes if the CSV provided by
+ * the source contains a line for the header.
+ * @returns Returns a JSON object describing the success of the operation.
+ */
+async function createSource(name, location, hasHeader) {
+    // Validate parameters:
+    if (typeof name !== 'string' && name.trim().length == 0) {
+        return apiError("Invalid parameter: `name` must be a non-whitespace non-empty string.");
+    }
+    if (typeof location !== 'string' && location.trim().length == 0) {
+        return apiError("Invalid parameter: `location` must be a non-whitespace non-empty string.");
+    }
+    if (typeof hasHeader !== 'boolean') {
+        return apiError("Invalid parameter: 'hasHeader' must be a boolean.");
+    }
+    
+    // Submit to the API:
+    return await queryApi(
+        '/api/source/',
+        method = 'POST',
+        body = {
+            name: name.trim(),
+            location: location.trim(),
+            has_header: hasHeader
+        }
+    );
+}
+
+/**
+ * Fetches information about a source.
+ * 
+ * @param {number} sourceId ID of the source.
+ * @returns Returns a JSON object describing the success of the operation.
+ */
+async function getSource(sourceId) {
+    // Validate parameters:
+    if (typeof sourceId !== 'number' || !Number.isInteger(sourceId)) {
+        return apiError("Invalid parameter: `sourceId` must be an integer.");
+    }
+
+    // Submit to the API:
+    return await queryApi(
+        `/api/source/${sourceId}/`,
+        method = 'GET'
+    );
+}
+
+/**
+ * Deletes a source.
+ * 
+ * @param {number} sourceId ID of the source to delete.
+ * @returns Returns a JSON object describing the success of the deletion
+ * operation.
+ */
+async function deleteSource(sourceId) {
+    // Validate parameters:
+    if (typeof sourceId !== 'number' || !Number.isInteger(sourceId)) {
+        return apiError("Invalid parameter: `sourceId` must be an integer.");
+    }
+
+    // Submit to the API:
+    return await queryApi(
+        `/api/source/${sourceId}/`,
+        method = 'DELETE'
+    );
+}
+
+/**
+ * Updates the information for a given source.
+ * 
+ * @param {number} sourceId ID of the source.
+ * @param {string} name Name of the source.
+ * @param {string} location Location that the application should fetch the data
+ * for this source from. This is typically an HTTPS endpoint.
+ * @param {boolean} hasHeader A boolean that describes if the CSV provided by
+ * the source contains a line for the header.
+ * @returns Returns a JSON object describing the success of the update
+ * operation.
+ */
+async function updateSource(sourceId, name, location, hasHeader) {
+    // Validate parameters:
+    if (typeof sourceId !== 'number' || !Number.isInteger(sourceId)) {
+        return apiError("Invalid parameter: `sourceId` must be an integer.");
+    }
+    if (typeof name !== 'string' && name.trim().length == 0) {
+        return apiError("Invalid parameter: `name` must be a non-whitespace non-empty string.");
+    }
+    if (typeof location !== 'string' && location.trim().length == 0) {
+        return apiError("Invalid parameter: `location` must be a non-whitespace non-empty string.");
+    }
+    if (typeof hasHeader !== 'boolean') {
+        return apiError("Invalid parameter: 'hasHeader' must be a boolean.");
+    }
+
+    // Submit to the API:
+    return await queryApi(
+        `/api/source/${sourceId}/`,
+        method = 'PUT',
+        body = {
+            name: name.trim(),
+            location: location.trim(),
+            has_header: hasHeader
+        }
+    );
+}
+
+/**
+ * Fetches the source data.
+ * 
+ * @param {number} sourceId ID of the source.
+ * @returns Returns a JSON object containing the source data.
+ */
+async function getSourceData(sourceId) {
+    // Validate parameters:
+    if (typeof sourceId !== 'number' || !Number.isInteger(sourceId)) {
+        return apiError("Invalid parameter: `sourceId` must be an integer.");
+    }
+
+    // Submit to the API:
+    return await queryApi(
+        `/api/source/${sourceId}/data/`,
+        method = 'GET'
+    );
+}
+
+/**
  * Queries the API for every graph.
  * 
  * @returns Returns a list of every graph as a JSON object.
  */
-async function listGraphs() {
+async function getGraphs() {
     return await queryApi('/api/graph/', method='GET');
 }
 
@@ -121,7 +261,7 @@ async function createGraph(name, description) {
  * should be an integer.
  * @returns Returns a JSON object describing the graph.
  */
-async function getGraphInformation(graphId) {
+async function getGraph(graphId) {
     // Validate parameters:
     if (typeof graphId !== 'number' || !Number.isInteger(graphId)) {
         return apiError("Invalid parameter: `graphId` must be an integer.");
@@ -168,7 +308,7 @@ async function deleteGraph(graphId) {
  * trailing whitespace will be trimmed.
  * @returns Returns a JSON object describing the success of the edit operation.
  */
-async function updateGraphInformation(graphId, name, description) {
+async function updateGraph(graphId, name, description) {
     // Validate parameters:
     if (typeof graphId !== 'number' || !Number.isInteger(graphId)) {
         return apiError("Invalid parameter: `graphId` must be an integer.");
@@ -199,7 +339,7 @@ async function updateGraphInformation(graphId, name, description) {
  * @returns Returns a JSON object containing each of the datasets for the given
  * graph.
  */
-async function listGraphDatasets(graphId) {
+async function getGraphDatasets(graphId) {
     // Validate parameters:
     if (typeof graphId !== 'number' || !Number.isInteger(graphId)) {
         return apiError("Invalid parameter: `graphId` must be an integer.");
@@ -271,7 +411,7 @@ async function createGraphDataset(graphId, label, plotType, isAxis, sourceId, co
  * about. This should be an integer.
  * @returns Returns a JSON object describing the dataset.
  */
-async function getGraphDatasetInformation(graphId, datasetId) {
+async function getGraphDataset(graphId, datasetId) {
     // Validate parameters:
     if (typeof graphId !== 'number' || !Number.isInteger(graphId)) {
         return apiError("Invalid parameter: `graphId` must be an integer.");

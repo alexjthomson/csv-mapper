@@ -30,7 +30,7 @@
 <script>
     async function updateGraphs() {
         $('#graph-error').hide();
-        const response = await listGraphs();
+        const response = await getGraphs();
         if (response.result == 'error') {
             $('#graph-error').text(`Failed to update graphs: ${response.message}`).hide();
         } else {
@@ -171,7 +171,7 @@
     var updateGraph = false;
     async function setInspectModalInfo(graphId) {
         $('#inspect-graph-error').hide();
-        const response = await getGraphInformation(graphId);
+        const response = await getGraph(graphId);
         if (response.result == 'success') {
             $('#inspect-graph-label').text(response.data.name);
         }
@@ -314,7 +314,7 @@
         {% if perms.api.add_graphdataset %}
         await showAddGraphDatasetEditor(graphId);
         {% endif %}
-        const response = await getGraphInformation(graphId);
+        const response = await getGraph(graphId);
         if (response.result != 'success') {
             $('#edit-graph-error').text(response.message).show();
         } else {
@@ -327,7 +327,7 @@
     async function submitEditGraphForm(graphId) {
         $('#edit-graph-error').hide();
         const form = $('#edit-graph-form');
-        const response = await updateGraphInformation(
+        const response = await updateGraph(
             graphId,
             form.find('[name="name"]').val(),
             form.find('[name="description"]').val()
@@ -341,7 +341,7 @@
     }
     async function updateGraphDatasetTable(graphId) {
         $('#edit-graph-dataset-table').empty();
-        const response = await listGraphDatasets(graphId);
+        const response = await getGraphDatasets(graphId);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -396,7 +396,7 @@
         {% if perms.api.view_source %}
         const sources = $('#edit-graph-dataset-source').empty().val('');
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
-        const response = await queryApi('/api/source/');
+        const response = await getSources();
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -420,7 +420,7 @@
         const sourceColumns = $('#edit-graph-dataset-source-column').empty().val('');
         {% if perms.api.view_source %}
         const selectedSource = $('#edit-graph-dataset-source').find(":selected").val();
-        const response = await queryApi(`/api/source/${selectedSource}/data/`);
+        const response = await getSourceData(selectedSource);
         if (response.result != 'success') {
             $('#edit-graph-dataset-error').text(response.message).show();
         } else {
@@ -470,7 +470,7 @@
     async function editGraphDataSet(graphId, datasetId) {
         clearGraphDatasetEditor();
         await updateGraphDatasetEditor(false);
-        const response = await getGraphDatasetInformation(
+        const response = await getGraphDataset(
             graphId,
             datasetId
         );
