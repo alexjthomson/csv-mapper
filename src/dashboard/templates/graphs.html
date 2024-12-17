@@ -168,7 +168,7 @@
 <script>
     const context = $('#inspect-graph-canvas');
     const chart = new Chart(context, {});
-    var updateGraph = false;
+    var shouldUpdateGraph = false;
     async function setInspectModalInfo(graphId) {
         $('#inspect-graph-error').hide();
         const response = await getGraph(graphId);
@@ -176,7 +176,7 @@
             $('#inspect-graph-label').text(response.data.name);
         }
         chart.data = {}; chart.options = {}; chart.update();
-        updateGraph = true;
+        shouldUpdateGraph = true;
         updateInspectModal(graphId, true);
     }
     async function updateInspectModal(graphId, firstTime) {
@@ -186,12 +186,12 @@
         } else {
             updateChart(chart, response.data, firstTime);
         }
-        if (updateGraph) {
+        if (shouldUpdateGraph) {
             setTimeout(updateInspectModal.bind(null, graphId, false), 20000);
         }
     }
     $("#inspect-graph-modal").on("hidden.bs.modal", function () {
-        updateGraph = false;
+        shouldUpdateGraph = false;
     });
 </script>
 {% endif %}
