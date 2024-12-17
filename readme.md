@@ -22,6 +22,7 @@ following dependencies are required. These can typically be found within your
 distributions package manager:
 - `docker`
 - `docker-compose`
+- `pip-tools`
 
 ### Creating an Instance
 This application was built to run in a Docker container in a stack alongside a

@@ -16,7 +16,7 @@ WORKDIR /code
 COPY src/. /code/
 RUN chown 1000:1000 /code
 COPY requirements.txt /code/
-RUN pip install -r requirements.txt
+RUN pip install --require-hashes -r requirements.txt
 RUN rm /code/requirements.txt
 
 COPY entrypoint.sh /

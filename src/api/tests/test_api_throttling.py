@@ -36,21 +36,6 @@ class ThrottlingTestCase(APITestCase):
         # APIClient setup
         self.client = APIClient()
 
-    # NOTE: Anonymous throttling cannot be tested since you must be
-    # authenticated to access any of the API endpoints.
-    # def test_anonymous_throttling(self):
-    #     throttle_limit = 100 # Anonymous rate limit
-
-    #     # Make requests as an anonymous user
-    #     for _ in range(throttle_limit):
-    #         response = self.client.get(self.url)
-    #         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    #     # Exceed the throttle limit
-    #     response = self.client.get(self.url)
-    #     self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
-    #     self.assertIn('throttled', response.data['detail'].lower())
-
     def test_registered_user_throttling(self):
         throttle_limit = 500 # Registered user rate limit
 
@@ -66,3 +51,18 @@ class ThrottlingTestCase(APITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertIn('throttled', response.data['detail'].lower())
+        
+    # NOTE: Anonymous throttling cannot be tested since you must be
+    # authenticated to access any of the API endpoints.
+    # def test_anonymous_throttling(self):
+    #     throttle_limit = 100 # Anonymous rate limit
+
+    #     # Make requests as an anonymous user
+    #     for _ in range(throttle_limit):
+    #         response = self.client.get(self.url)
+    #         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    #     # Exceed the throttle limit
+    #     response = self.client.get(self.url)
+    #     self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+    #     self.assertIn('throttled', response.data['detail'].lower())

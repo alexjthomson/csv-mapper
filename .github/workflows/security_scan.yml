@@ -18,9 +18,9 @@ jobs:
           find ./src -type d -name "tests" -exec rm -rf {} +
       - name: Run Bandit (Static Code Analysis)
         run: |
-          pip install bandit
+          pip install --require-hashes bandit
           bandit -r ./src
       - name: Run Safety (Dependency Vulnerability Scan)
         run: |
-          pip install safety
+          pip install --require-hashes safety
           safety check -r requirements.txt
