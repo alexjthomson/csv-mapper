@@ -33,4 +33,7 @@ sudo docker-compose down --remove-orphans --rmi all --volumes
 sudo docker-compose up --force-recreate --build -d && sudo docker-compose down
 sudo docker image prune -f
 
+# Python Requirements:
+pip-compile --generate-hashes -o requirements.txt
+
 sudo docker-compose up -d

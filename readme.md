@@ -22,6 +22,7 @@ following dependencies are required. These can typically be found within your
 distributions package manager:
 - `docker`
 - `docker-compose`
+- `pip-tools`
 
 ### Creating an Instance
 This application was built to run in a Docker container in a stack alongside a
@@ -38,6 +39,36 @@ before continuing with this guide.
 4. The container and MySQL database should now be setup. The application can be
    started by running `docker-compose up -d`. You may need to run this as a
    superuser if you do not have a rootless Docker configuration.
+
+### Hosting the Instance
+If you plan on hosting the instance yourself, you will need to update the
+`ALLOWED_HOSTS` variable in the projects
+[`security.py`](src/base/settings/security.py) file. You will also need a
+service such as Nginx to provide TLS for the site.
+
+#### Example Nginx Configuration
+```
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name mydomain.com;
+    ssl_certificate             /srv/http/mydomain.com/ssl/mydomain.com.crt;
+    ssl_certificate_key         /srv/http/mydomain.com/ssl/mydomain.com.key; # Cloudflare SSL Public Key
+    ssl_client_certificate      /srv/http/mydomain.com/ssl/cloudflare.crt;   # Cloudflare Client Certificate
+    ssl_verify_client           on;                                          # Verify SSL
+    location / {
+        proxy_pass              http://12.34.56.78:8000;                     # Change to IPv4 of Host
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout      90;
+        client_max_body_size    10M;
+        client_body_buffer_size 1M;
+    }
+}
+```
 
 ## Developer Guide
 To continue development of this project, please follow the
