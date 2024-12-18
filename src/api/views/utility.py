@@ -28,7 +28,7 @@ class SanitisedJSON:
         return value
 
     def get(self, key, default=None):
-        """Get sanitized value with a default."""
+        """Get sanitised value with a default."""
         return self[key] if key in self._data else default
 
     def as_dict(self):
